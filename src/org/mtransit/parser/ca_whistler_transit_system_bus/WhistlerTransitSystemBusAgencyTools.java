@@ -19,6 +19,7 @@ import org.mtransit.parser.mt.data.MTrip;
 
 // http://bctransit.com/*/footer/open-data
 // http://bctransit.com/servlet/bctransit/data/GTFS.zip
+// http://bct2.baremetal.com:8080/GoogleTransit/BCTransit/google_transit.zip
 public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	public static void main(String[] args) {
@@ -42,8 +43,17 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		System.out.printf("Generating Whistler Transit System bus data... DONE in %s.\n", Utils.getPrettyDuration(System.currentTimeMillis() - start));
 	}
 
+	private static final String INCLUDE_ONLY_SERVICE_ID_CONTAINS = "SPR";
+	private static final String INCLUDE_ONLY_SERVICE_ID_CONTAINS2 = "SUM";
+	private static final String INCLUDE_ONLY_SERVICE_ID_CONTAINS3 = "EW";
+
 	@Override
 	public boolean excludeCalendar(GCalendar gCalendar) {
+		if (INCLUDE_ONLY_SERVICE_ID_CONTAINS != null && !gCalendar.service_id.contains(INCLUDE_ONLY_SERVICE_ID_CONTAINS)
+				&& INCLUDE_ONLY_SERVICE_ID_CONTAINS2 != null && !gCalendar.service_id.contains(INCLUDE_ONLY_SERVICE_ID_CONTAINS2)
+				&& INCLUDE_ONLY_SERVICE_ID_CONTAINS3 != null && !gCalendar.service_id.contains(INCLUDE_ONLY_SERVICE_ID_CONTAINS3)) {
+			return true;
+		}
 		if (this.serviceIds != null) {
 			return excludeUselessCalendar(gCalendar, this.serviceIds);
 		}
@@ -52,6 +62,11 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public boolean excludeCalendarDate(GCalendarDate gCalendarDates) {
+		if (INCLUDE_ONLY_SERVICE_ID_CONTAINS != null && !gCalendarDates.service_id.contains(INCLUDE_ONLY_SERVICE_ID_CONTAINS)
+				&& INCLUDE_ONLY_SERVICE_ID_CONTAINS2 != null && !gCalendarDates.service_id.contains(INCLUDE_ONLY_SERVICE_ID_CONTAINS2)
+				&& INCLUDE_ONLY_SERVICE_ID_CONTAINS3 != null && !gCalendarDates.service_id.contains(INCLUDE_ONLY_SERVICE_ID_CONTAINS3)) {
+			return true;
+		}
 		if (this.serviceIds != null) {
 			return excludeUselessCalendarDate(gCalendarDates, this.serviceIds);
 		}
@@ -70,6 +85,11 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public boolean excludeTrip(GTrip gTrip) {
+		if (INCLUDE_ONLY_SERVICE_ID_CONTAINS != null && !gTrip.service_id.contains(INCLUDE_ONLY_SERVICE_ID_CONTAINS)
+				&& INCLUDE_ONLY_SERVICE_ID_CONTAINS2 != null && !gTrip.service_id.contains(INCLUDE_ONLY_SERVICE_ID_CONTAINS2)
+				&& INCLUDE_ONLY_SERVICE_ID_CONTAINS3 != null && !gTrip.service_id.contains(INCLUDE_ONLY_SERVICE_ID_CONTAINS3)) {
+			return true;
+		}
 		if (this.serviceIds != null) {
 			return excludeUselessTrip(gTrip, this.serviceIds);
 		}
@@ -160,8 +180,9 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		mTrip.setHeadsignString(cleanTripHeadsign(gTrip.trip_headsign), gTrip.direction_id);
 	}
 
-	private static final Pattern EXCHANGE = Pattern.compile("(exchange)", Pattern.CASE_INSENSITIVE);
-	private static final String EXCHANGE_REPLACEMENT = "Ex";
+	private static final String EXCH = "Exch";
+	private static final Pattern EXCHANGE = Pattern.compile("((^|\\W){1}(exchange)(\\W|$){1})", Pattern.CASE_INSENSITIVE);
+	private static final String EXCHANGE_REPLACEMENT = "$2" + EXCH + "$4";
 
 	private static final Pattern ENDS_WITH_VIA = Pattern.compile("( via .*$)", Pattern.CASE_INSENSITIVE);
 	private static final Pattern STARTS_WITH_TO = Pattern.compile("(^.* to )", Pattern.CASE_INSENSITIVE);
@@ -183,13 +204,14 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		tripHeadsign = CLEAN_P1.matcher(tripHeadsign).replaceAll(CLEAN_P1_REPLACEMENT);
 		tripHeadsign = CLEAN_P2.matcher(tripHeadsign).replaceAll(CLEAN_P2_REPLACEMENT);
 		tripHeadsign = MSpec.cleanStreetTypes(tripHeadsign);
+		tripHeadsign = MSpec.cleanNumbers(tripHeadsign);
 		return MSpec.cleanLabel(tripHeadsign);
 	}
 
 	private static final Pattern STARTS_WITH_BOUND = Pattern.compile("(^(east|west|north|south)bound)", Pattern.CASE_INSENSITIVE);
 
-	private static final Pattern AT = Pattern.compile("( at )", Pattern.CASE_INSENSITIVE);
-	private static final String AT_REPLACEMENT = " / ";
+	private static final Pattern AT = Pattern.compile("((^|\\W){1}(at)(\\W|$){1})", Pattern.CASE_INSENSITIVE);
+	private static final String AT_REPLACEMENT = "$2/$4";
 
 	@Override
 	public String cleanStopName(String gStopName) {
@@ -197,6 +219,7 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		gStopName = AT.matcher(gStopName).replaceAll(AT_REPLACEMENT);
 		gStopName = EXCHANGE.matcher(gStopName).replaceAll(EXCHANGE_REPLACEMENT);
 		gStopName = MSpec.cleanStreetTypes(gStopName);
+		gStopName = MSpec.cleanNumbers(gStopName);
 		return MSpec.cleanLabel(gStopName);
 	}
 }

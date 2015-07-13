@@ -36,16 +36,16 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public void start(String[] args) {
-		System.out.printf("\nGenerating Whistler Transit System bus data...\n");
+		System.out.printf("\nGenerating Whistler Transit System bus data...");
 		long start = System.currentTimeMillis();
 		this.serviceIds = extractUsefulServiceIds(args, this);
 		super.start(args);
 		System.out.printf("\nGenerating Whistler Transit System bus data... DONE in %s.\n", Utils.getPrettyDuration(System.currentTimeMillis() - start));
 	}
 
-	private static final String INCLUDE_ONLY_SERVICE_ID_CONTAINS = "SPR";
-	private static final String INCLUDE_ONLY_SERVICE_ID_CONTAINS2 = "SUM";
-	private static final String INCLUDE_ONLY_SERVICE_ID_CONTAINS3 = "EW";
+	private static final String INCLUDE_ONLY_SERVICE_ID_CONTAINS = null;
+	private static final String INCLUDE_ONLY_SERVICE_ID_CONTAINS2 = null;
+	private static final String INCLUDE_ONLY_SERVICE_ID_CONTAINS3 = null;
 
 	@Override
 	public boolean excludeCalendar(GCalendar gCalendar) {

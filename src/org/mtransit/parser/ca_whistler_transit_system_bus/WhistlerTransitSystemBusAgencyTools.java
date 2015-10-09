@@ -160,7 +160,7 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public void setTripHeadsign(MRoute mRoute, MTrip mTrip, GTrip gTrip, GSpec gtfs) {
-		if (mRoute.id == 1l) {
+		if (mRoute.getId() == 1l) {
 			if (gTrip.getDirectionId() == 0) {
 				mTrip.setHeadsignDirection(MDirectionType.NORTH);
 				return;
@@ -168,7 +168,7 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 				mTrip.setHeadsignDirection(MDirectionType.SOUTH);
 				return;
 			}
-		} else if (mRoute.id == 2l) {
+		} else if (mRoute.getId() == 2l) {
 			if (gTrip.getDirectionId() == 0) {
 				mTrip.setHeadsignDirection(MDirectionType.NORTH);
 				return;

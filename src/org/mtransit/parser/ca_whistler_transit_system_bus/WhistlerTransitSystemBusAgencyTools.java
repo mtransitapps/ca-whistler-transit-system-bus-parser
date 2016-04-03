@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
+import org.mtransit.parser.CleanUtils;
 import org.mtransit.parser.DefaultAgencyTools;
 import org.mtransit.parser.Utils;
 import org.mtransit.parser.gtfs.data.GCalendar;
@@ -12,9 +13,7 @@ import org.mtransit.parser.gtfs.data.GRoute;
 import org.mtransit.parser.gtfs.data.GSpec;
 import org.mtransit.parser.gtfs.data.GTrip;
 import org.mtransit.parser.mt.data.MAgency;
-import org.mtransit.parser.mt.data.MDirectionType;
 import org.mtransit.parser.mt.data.MRoute;
-import org.mtransit.parser.CleanUtils;
 import org.mtransit.parser.mt.data.MTrip;
 
 // http://bctransit.com/*/footer/open-data
@@ -160,6 +159,38 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public void setTripHeadsign(MRoute mRoute, MTrip mTrip, GTrip gTrip, GSpec gtfs) {
+		if (StringUtils.isEmpty(gTrip.getTripHeadsign())) {
+			if (mRoute.getId() == 1l) {
+				if (gTrip.getDirectionId() == 0) {
+					mTrip.setHeadsignString("Emerald", gTrip.getDirectionId());
+					return;
+				} else if (gTrip.getDirectionId() == 1) {
+					mTrip.setHeadsignString("Cheakamus", gTrip.getDirectionId());
+					return;
+				}
+			} else if (mRoute.getId() == 2l) {
+				if (gTrip.getDirectionId() == 0) {
+					mTrip.setHeadsignString("Gondola Exch", gTrip.getDirectionId());
+					return;
+				} else if (gTrip.getDirectionId() == 1) {
+					mTrip.setHeadsignString("Cheakamus", gTrip.getDirectionId());
+					return;
+				}
+			} else if (mRoute.getId() == 3l) {
+				if (gTrip.getDirectionId() == 0) {
+					mTrip.setHeadsignString("Gondola Ex", gTrip.getDirectionId());
+					return;
+				} else if (gTrip.getDirectionId() == 1) {
+					mTrip.setHeadsignString("Emerald & Pinetree", gTrip.getDirectionId());
+					return;
+				}
+			} else if (mRoute.getId() == 4l) {
+				if (gTrip.getDirectionId() == 1) {
+					mTrip.setHeadsignString("Marketplace (IGA)", gTrip.getDirectionId());
+					return;
+				}
+			}
+		}
 		mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), gTrip.getDirectionId());
 	}
 

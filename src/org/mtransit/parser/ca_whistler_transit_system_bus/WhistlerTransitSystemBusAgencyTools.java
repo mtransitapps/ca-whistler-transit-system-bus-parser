@@ -213,6 +213,11 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 				mTrip.setHeadsignString("Cheakamus", mTrip.getHeadsignId());
 				return true;
 			}
+		} else if (mTrip.getRouteId() == 3L) {
+			if (mTrip.getHeadsignId() == 1) {
+				mTrip.setHeadsignString("Emerald", mTrip.getHeadsignId());
+				return true;
+			}
 		}
 		System.out.printf("\nUnexpected trips to merge %s & %s.\n", mTrip, mTripToMerge);
 		System.exit(-1);

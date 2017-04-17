@@ -1,25 +1,34 @@
 package org.mtransit.parser.ca_whistler_transit_system_bus;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.mtransit.parser.CleanUtils;
 import org.mtransit.parser.DefaultAgencyTools;
+import org.mtransit.parser.Pair;
+import org.mtransit.parser.SplitUtils;
 import org.mtransit.parser.Utils;
+import org.mtransit.parser.SplitUtils.RouteTripSpec;
 import org.mtransit.parser.gtfs.data.GCalendar;
 import org.mtransit.parser.gtfs.data.GCalendarDate;
 import org.mtransit.parser.gtfs.data.GRoute;
 import org.mtransit.parser.gtfs.data.GSpec;
+import org.mtransit.parser.gtfs.data.GStop;
 import org.mtransit.parser.gtfs.data.GTrip;
+import org.mtransit.parser.gtfs.data.GTripStop;
 import org.mtransit.parser.mt.data.MAgency;
 import org.mtransit.parser.mt.data.MRoute;
 import org.mtransit.parser.mt.data.MTrip;
+import org.mtransit.parser.mt.data.MTripStop;
 
-// http://bctransit.com/*/footer/open-data
-// http://bctransit.com/servlet/bctransit/data/GTFS.zip
-// http://bct2.baremetal.com:8080/GoogleTransit/BCTransit/google_transit.zip
+// https://bctransit.com/*/footer/open-data
+// https://bctransit.com/servlet/bctransit/data/GTFS - Whistler
 public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	public static void main(String[] args) {
@@ -158,63 +167,75 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		return super.getRouteColor(gRoute);
 	}
 
+	private static HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
+	static {
+		HashMap<Long, RouteTripSpec> map2 = new HashMap<Long, RouteTripSpec>();
+		map2.put(2L, new RouteTripSpec(2L, //
+				0, MTrip.HEADSIGN_TYPE_STRING, "Gondola Exch", //
+				1, MTrip.HEADSIGN_TYPE_STRING, "Cheakamus") //
+				.addTripSort(0, //
+						Arrays.asList(new String[] { //
+						"102690", // Cheakamus Crossing at HI Whistler
+								"102691", // ==
+								"102681", // <>
+								"102682", // <>
+								"102673", // ==
+								"102713", // Gondola Exchange Bay 2
+						})) //
+				.addTripSort(1, //
+						Arrays.asList(new String[] { //
+						"102713", // Gondola Exchange Bay 2
+								"102645",// ==
+								"102681", // <>
+								"102682", // <>
+								"102683", // ==
+								"102690", // Cheakamus Crossing at HI Whistler
+						})) //
+				.compileBothTripSort());
+		ALL_ROUTE_TRIPS2 = map2;
+	}
+
+	@Override
+	public int compareEarly(long routeId, List<MTripStop> list1, List<MTripStop> list2, MTripStop ts1, MTripStop ts2, GStop ts1GStop, GStop ts2GStop) {
+		if (ALL_ROUTE_TRIPS2.containsKey(routeId)) {
+			return ALL_ROUTE_TRIPS2.get(routeId).compare(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop);
+		}
+		return super.compareEarly(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop);
+	}
+
+	@Override
+	public ArrayList<MTrip> splitTrip(MRoute mRoute, GTrip gTrip, GSpec gtfs) {
+		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
+			return ALL_ROUTE_TRIPS2.get(mRoute.getId()).getAllTrips();
+		}
+		return super.splitTrip(mRoute, gTrip, gtfs);
+	}
+
+	@Override
+	public Pair<Long[], Integer[]> splitTripStop(MRoute mRoute, GTrip gTrip, GTripStop gTripStop, ArrayList<MTrip> splitTrips, GSpec routeGTFS) {
+		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
+			return SplitUtils.splitTripStop(mRoute, gTrip, gTripStop, routeGTFS, ALL_ROUTE_TRIPS2.get(mRoute.getId()));
+		}
+		return super.splitTripStop(mRoute, gTrip, gTripStop, splitTrips, routeGTFS);
+	}
+
 	@Override
 	public void setTripHeadsign(MRoute mRoute, MTrip mTrip, GTrip gTrip, GSpec gtfs) {
-		if (StringUtils.isEmpty(gTrip.getTripHeadsign())) {
-			if (mRoute.getId() == 1l) {
-				if (gTrip.getDirectionId() == 0) {
-					mTrip.setHeadsignString("Emerald", gTrip.getDirectionId());
-					return;
-				} else if (gTrip.getDirectionId() == 1) {
-					mTrip.setHeadsignString("Cheakamus", gTrip.getDirectionId());
-					return;
-				}
-			} else if (mRoute.getId() == 2l) {
-				if (gTrip.getDirectionId() == 0) {
-					mTrip.setHeadsignString("Gondola Exch", gTrip.getDirectionId());
-					return;
-				} else if (gTrip.getDirectionId() == 1) {
-					mTrip.setHeadsignString("Cheakamus", gTrip.getDirectionId());
-					return;
-				}
-			} else if (mRoute.getId() == 3l) {
-				if (gTrip.getDirectionId() == 0) {
-					mTrip.setHeadsignString("Gondola Ex", gTrip.getDirectionId());
-					return;
-				} else if (gTrip.getDirectionId() == 1) {
-					mTrip.setHeadsignString("Emerald & Pinetree", gTrip.getDirectionId());
-					return;
-				}
-			} else if (mRoute.getId() == 4l) {
-				if (gTrip.getDirectionId() == 1) {
-					mTrip.setHeadsignString("Marketplace (IGA)", gTrip.getDirectionId());
-					return;
-				}
-			}
+		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
+			return; // split
 		}
 		mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), gTrip.getDirectionId());
 	}
 
 	@Override
 	public boolean mergeHeadsign(MTrip mTrip, MTrip mTripToMerge) {
+		List<String> headsignsValues = Arrays.asList(mTrip.getHeadsignValue(), mTripToMerge.getHeadsignValue());
 		if (mTrip.getRouteId() == 1L) {
-			if (mTrip.getHeadsignId() == 0) {
-				mTrip.setHeadsignString("Emerald", mTrip.getHeadsignId());
-				return true;
-			} else if (mTrip.getHeadsignId() == 1) {
-				mTrip.setHeadsignString("Cheakamus", mTrip.getHeadsignId());
-				return true;
-			}
-		} else if (mTrip.getRouteId() == 2L) {
-			if (mTrip.getHeadsignId() == 0) {
-				mTrip.setHeadsignString("Whistler Vlg", mTrip.getHeadsignId());
-				return true;
-			} else if (mTrip.getHeadsignId() == 1) {
-				mTrip.setHeadsignString("Cheakamus", mTrip.getHeadsignId());
-				return true;
-			}
-		} else if (mTrip.getRouteId() == 3L) {
-			if (mTrip.getHeadsignId() == 1) {
+			if (Arrays.asList( //
+					"", // (empty)
+					"Emerald", //
+					"Vlg" //
+			).containsAll(headsignsValues)) {
 				mTrip.setHeadsignString("Emerald", mTrip.getHeadsignId());
 				return true;
 			}

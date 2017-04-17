@@ -170,28 +170,6 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	private static HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
 	static {
 		HashMap<Long, RouteTripSpec> map2 = new HashMap<Long, RouteTripSpec>();
-		map2.put(2L, new RouteTripSpec(2L, //
-				0, MTrip.HEADSIGN_TYPE_STRING, "Gondola Exch", //
-				1, MTrip.HEADSIGN_TYPE_STRING, "Cheakamus") //
-				.addTripSort(0, //
-						Arrays.asList(new String[] { //
-						"102690", // Cheakamus Crossing at HI Whistler
-								"102691", // ==
-								"102681", // <>
-								"102682", // <>
-								"102673", // ==
-								"102713", // Gondola Exchange Bay 2
-						})) //
-				.addTripSort(1, //
-						Arrays.asList(new String[] { //
-						"102713", // Gondola Exchange Bay 2
-								"102645",// ==
-								"102681", // <>
-								"102682", // <>
-								"102683", // ==
-								"102690", // Cheakamus Crossing at HI Whistler
-						})) //
-				.compileBothTripSort());
 		ALL_ROUTE_TRIPS2 = map2;
 	}
 
@@ -223,6 +201,22 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	public void setTripHeadsign(MRoute mRoute, MTrip mTrip, GTrip gTrip, GSpec gtfs) {
 		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
 			return; // split
+		}
+		if (StringUtils.isEmpty(gTrip.getTripHeadsign())) {
+			if (mRoute.getId() == 1l) {
+				if (gTrip.getDirectionId() == 1) {
+					mTrip.setHeadsignString("Cheakamus", gTrip.getDirectionId());
+					return;
+				}
+			} else if (mRoute.getId() == 2l) {
+				if (gTrip.getDirectionId() == 0) {
+					mTrip.setHeadsignString("Gondola Exch", gTrip.getDirectionId());
+					return;
+				} else if (gTrip.getDirectionId() == 1) {
+					mTrip.setHeadsignString("Cheakamus", gTrip.getDirectionId());
+					return;
+				}
+			}
 		}
 		mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), gTrip.getDirectionId());
 	}

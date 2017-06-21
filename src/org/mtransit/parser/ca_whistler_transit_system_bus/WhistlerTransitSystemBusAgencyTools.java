@@ -170,6 +170,26 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	private static HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
 	static {
 		HashMap<Long, RouteTripSpec> map2 = new HashMap<Long, RouteTripSpec>();
+		map2.put(99L, new RouteTripSpec(99L, //
+				0, MTrip.HEADSIGN_TYPE_STRING, "Pemberton", //
+				1, MTrip.HEADSIGN_TYPE_STRING, "Whistler") //
+				.addTripSort(0, //
+						Arrays.asList(new String[] { //
+						"102713", // Gondola Exchange Bay 2
+								"102594", // != ==
+								"102600", // <> !=
+								"102620", // != ==
+								"102843", // Northbound Frontier at Birch
+						})) //
+				.addTripSort(1, //
+						Arrays.asList(new String[] { //
+						"102843", // Northbound Frontier at Birch
+								"102619", // !=
+								"102600", // <>
+								"102589", // !=
+								"102713", // Gondola Exchange Bay 2
+						})) //
+				.compileBothTripSort());
 		ALL_ROUTE_TRIPS2 = map2;
 	}
 
@@ -202,22 +222,6 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
 			return; // split
 		}
-		if (StringUtils.isEmpty(gTrip.getTripHeadsign())) {
-			if (mRoute.getId() == 1l) {
-				if (gTrip.getDirectionId() == 1) {
-					mTrip.setHeadsignString("Cheakamus", gTrip.getDirectionId());
-					return;
-				}
-			} else if (mRoute.getId() == 2l) {
-				if (gTrip.getDirectionId() == 0) {
-					mTrip.setHeadsignString("Gondola Exch", gTrip.getDirectionId());
-					return;
-				} else if (gTrip.getDirectionId() == 1) {
-					mTrip.setHeadsignString("Cheakamus", gTrip.getDirectionId());
-					return;
-				}
-			}
-		}
 		mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), gTrip.getDirectionId());
 	}
 
@@ -231,6 +235,21 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 					"Vlg" //
 			).containsAll(headsignsValues)) {
 				mTrip.setHeadsignString("Emerald", mTrip.getHeadsignId());
+				return true;
+			} else if (Arrays.asList( //
+					"Cheakamus", //
+					"Spg Crk", //
+					"Vlg" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Cheakamus", mTrip.getHeadsignId());
+				return true;
+			}
+		} else if (mTrip.getRouteId() == 2L) {
+			if (Arrays.asList( //
+					"Cheakamus", //
+					"Function / Cheakamus" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Cheakamus", mTrip.getHeadsignId());
 				return true;
 			}
 		}
@@ -246,6 +265,8 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	private static final Pattern ENDS_WITH_VIA = Pattern.compile("( via .*$)", Pattern.CASE_INSENSITIVE);
 	private static final Pattern STARTS_WITH_TO = Pattern.compile("(^.* to )", Pattern.CASE_INSENSITIVE);
 
+	private static final Pattern FREE_SHUTTLE = Pattern.compile("((^|\\W){1}(free shuttle)(\\W|$){1})", Pattern.CASE_INSENSITIVE);
+
 	private static final Pattern AND = Pattern.compile("( and )", Pattern.CASE_INSENSITIVE);
 	private static final String AND_REPLACEMENT = " & ";
 
@@ -260,6 +281,7 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 			tripHeadsign = tripHeadsign.toLowerCase(Locale.ENGLISH);
 		}
 		tripHeadsign = EXCHANGE.matcher(tripHeadsign).replaceAll(EXCHANGE_REPLACEMENT);
+		tripHeadsign = FREE_SHUTTLE.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
 		tripHeadsign = ENDS_WITH_VIA.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
 		tripHeadsign = STARTS_WITH_TO.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
 		tripHeadsign = AND.matcher(tripHeadsign).replaceAll(AND_REPLACEMENT);

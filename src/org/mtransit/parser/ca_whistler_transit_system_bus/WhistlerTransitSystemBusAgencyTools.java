@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
@@ -110,8 +111,25 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		return MAgency.ROUTE_TYPE_BUS;
 	}
 
+	private static final Pattern DIGITS = Pattern.compile("[\\d]+");
+
 	@Override
 	public long getRouteId(GRoute gRoute) {
+		if (!Utils.isDigitsOnly(gRoute.getRouteShortName())) {
+			Matcher matcher = DIGITS.matcher(gRoute.getRouteShortName());
+			if (matcher.find()) {
+				int digits = Integer.parseInt(matcher.group());
+				String rsn = gRoute.getRouteShortName().toLowerCase(Locale.ENGLISH);
+				if (rsn.endsWith("w")) {
+					return digits + 23_000_000L;
+				} else if (rsn.endsWith("x")) {
+					return digits + 24_000_000L;
+				}
+				System.out.printf("\nUnexptected route ID for %s!\n", gRoute);
+				System.exit(-1);
+				return -1l;
+			}
+		}
 		return Long.parseLong(gRoute.getRouteShortName()); // use route short name as route ID
 	}
 
@@ -231,6 +249,7 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		if (mTrip.getRouteId() == 1L) {
 			if (Arrays.asList( //
 					"", // (empty)
+					"Alpine", //
 					"Emerald", //
 					"Vlg" //
 			).containsAll(headsignsValues)) {
@@ -239,7 +258,8 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 			} else if (Arrays.asList( //
 					"Cheakamus", //
 					"Spg Crk", //
-					"Vlg" //
+					"Vlg", //
+					"Whistler Crk" //
 			).containsAll(headsignsValues)) {
 				mTrip.setHeadsignString("Cheakamus", mTrip.getHeadsignId());
 				return true;

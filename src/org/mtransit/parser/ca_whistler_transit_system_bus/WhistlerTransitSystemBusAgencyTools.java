@@ -113,6 +113,9 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	private static final Pattern DIGITS = Pattern.compile("[\\d]+");
 
+	private static final long RID_ENDS_WITH_W = 23_000_000L;
+	private static final long RID_ENDS_WITH_X = 24_000_000L;
+
 	@Override
 	public long getRouteId(GRoute gRoute) {
 		if (!Utils.isDigitsOnly(gRoute.getRouteShortName())) {
@@ -121,9 +124,9 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 				int digits = Integer.parseInt(matcher.group());
 				String rsn = gRoute.getRouteShortName().toLowerCase(Locale.ENGLISH);
 				if (rsn.endsWith("w")) {
-					return digits + 23_000_000L;
+					return digits + RID_ENDS_WITH_W;
 				} else if (rsn.endsWith("x")) {
-					return digits + 24_000_000L;
+					return digits + RID_ENDS_WITH_X;
 				}
 				System.out.printf("\nUnexptected route ID for %s!\n", gRoute);
 				System.exit(-1);
@@ -152,34 +155,40 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		return AGENCY_COLOR;
 	}
 
-	private static final String COLOR_F78B1F = "F78B1F";
-	private static final String COLOR_004B8D = "004B8D";
-	private static final String COLOR_8CC63F = "8CC63F";
-	private static final String COLOR_4F6F19 = "4F6F19";
-	private static final String COLOR_8D0B3A = "8D0B3A";
-	private static final String COLOR_FFC20E = "FFC20E";
-	private static final String COLOR_B2A97E = "B2A97E";
-	private static final String COLOR_77AD98 = "77AD98";
-	private static final String COLOR_5D86BF = "5D86BF";
 
 	@Override
 	public String getRouteColor(GRoute gRoute) {
 		if (StringUtils.isEmpty(gRoute.getRouteColor())) {
+			if (!Utils.isDigitsOnly(gRoute.getRouteShortName())) {
+				if ("20X".equalsIgnoreCase(gRoute.getRouteShortName())) {
+					return "0C4D8C";
+				} else if ("25X".equalsIgnoreCase(gRoute.getRouteShortName())) {
+					return "EB1D8D";
+				}
+			}
 			int rsn = Integer.parseInt(gRoute.getRouteShortName());
 			switch (rsn) {
 			// @formatter:off
-			case 1: return COLOR_F78B1F;
-			case 2: return COLOR_004B8D;
-			case 3: return COLOR_8CC63F;
-			case 4: return COLOR_4F6F19;
-			case 5: return COLOR_8D0B3A;
-			case 6: return COLOR_FFC20E;
-			case 7: return COLOR_B2A97E;
-			case 8: return COLOR_77AD98;
-			case 99: return COLOR_5D86BF;
+			case 4: return "00AA4F";
+			case 5: return "8E0D3A";
+			case 6: return "FDC215";
+			case 7: return "B3AA7E";
+			case 8: return "F49AC1";
+			case 20: return "0C4D8C";
+			case 21: return "F68A20";
+			case 25: return "EB1D8D";
+			case 30: return "27ABE2";
+			case 31: return "A44499";
+			case 32: return "8CC640";
+			case 99: return "5C87A1";
 			// @formatter:on
 			default:
-				return AGENCY_COLOR_BLUE;
+				if (super.isGoodEnoughAccepted()) {
+					return AGENCY_COLOR_BLUE;
+				}
+				System.out.printf("\nUnexpected route color %s!\n", gRoute);
+				System.exit(-1);
+				return null;
 			}
 		}
 		return super.getRouteColor(gRoute);
@@ -206,6 +215,22 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 								"102600", // <>
 								"102589", // !=
 								"102713", // Gondola Exchange Bay 2
+						})) //
+				.compileBothTripSort());
+		map2.put(31L, new RouteTripSpec(31L, //
+				0, MTrip.HEADSIGN_TYPE_STRING, "Alpine", //
+				1, MTrip.HEADSIGN_TYPE_STRING, "Whistler") // Gondola
+				.addTripSort(0, //
+						Arrays.asList(new String[] { //
+						"102714", // Gondola Exchange Bay 3
+								"102503", // ++
+								"102622", // Westbound Alpine at Rainbow
+						})) //
+				.addTripSort(1, //
+						Arrays.asList(new String[] { //
+						"102622", // Westbound Alpine at Rainbow
+								"102634", // ++
+								"102714", // Gondola Exchange Bay 3
 						})) //
 				.compileBothTripSort());
 		ALL_ROUTE_TRIPS2 = map2;
@@ -248,7 +273,7 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		List<String> headsignsValues = Arrays.asList(mTrip.getHeadsignValue(), mTripToMerge.getHeadsignValue());
 		if (mTrip.getRouteId() == 1L) {
 			if (Arrays.asList( //
-					"", // (empty)
+					StringUtils.EMPTY, // (empty)
 					"Alpine", //
 					"Emerald", //
 					"Vlg" //
@@ -272,6 +297,48 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 				mTrip.setHeadsignString("Cheakamus", mTrip.getHeadsignId());
 				return true;
 			}
+		} else if (mTrip.getRouteId() == 20L) {
+			if (Arrays.asList( //
+					"Vlg", //
+					"Via Function Jct" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Vlg", mTrip.getHeadsignId());
+				return true;
+			} else if (Arrays.asList( //
+					"Cheakamus", //
+					"Via Function Jct" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Cheakamus", mTrip.getHeadsignId());
+				return true;
+			}
+		} else if (mTrip.getRouteId() == 20L + RID_ENDS_WITH_X) { // 20X
+			if (Arrays.asList( //
+					"Vlg Exp", //
+					"Via Function Jct" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Vlg Exp", mTrip.getHeadsignId());
+				return true;
+			} else if (Arrays.asList( //
+					"Cheakamus Exp", //
+					"Via Function Jct" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Cheakamus Exp", mTrip.getHeadsignId());
+				return true;
+			}
+		} else if (mTrip.getRouteId() == 30L) {
+			if (Arrays.asList( //
+					"Alpine / Emerald", //
+					"Emerald" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Emerald", mTrip.getHeadsignId());
+				return true;
+			} else if (Arrays.asList( //
+					"Vlg", //
+					"Via Alpine" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Vlg", mTrip.getHeadsignId());
+				return true;
+			}
 		}
 		System.out.printf("\nUnexpected trips to merge %s & %s.\n", mTrip, mTripToMerge);
 		System.exit(-1);
@@ -282,7 +349,7 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	private static final Pattern EXCHANGE = Pattern.compile("((^|\\W){1}(exchange)(\\W|$){1})", Pattern.CASE_INSENSITIVE);
 	private static final String EXCHANGE_REPLACEMENT = "$2" + EXCH + "$4";
 
-	private static final Pattern ENDS_WITH_VIA = Pattern.compile("( via .*$)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern ENDS_WITH_VIA = Pattern.compile("([\\s]?[\\-]?[\\s]?via .*$)", Pattern.CASE_INSENSITIVE);
 	private static final Pattern STARTS_WITH_TO = Pattern.compile("(^.* to )", Pattern.CASE_INSENSITIVE);
 
 	private static final Pattern FREE_SHUTTLE = Pattern.compile("((^|\\W){1}(free shuttle)(\\W|$){1})", Pattern.CASE_INSENSITIVE);

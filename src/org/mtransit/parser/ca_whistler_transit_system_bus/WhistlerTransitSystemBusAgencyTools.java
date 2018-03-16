@@ -155,7 +155,6 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		return AGENCY_COLOR;
 	}
 
-
 	@Override
 	public String getRouteColor(GRoute gRoute) {
 		if (StringUtils.isEmpty(gRoute.getRouteColor())) {
@@ -239,7 +238,7 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public int compareEarly(long routeId, List<MTripStop> list1, List<MTripStop> list2, MTripStop ts1, MTripStop ts2, GStop ts1GStop, GStop ts2GStop) {
 		if (ALL_ROUTE_TRIPS2.containsKey(routeId)) {
-			return ALL_ROUTE_TRIPS2.get(routeId).compare(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop);
+			return ALL_ROUTE_TRIPS2.get(routeId).compare(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop, this);
 		}
 		return super.compareEarly(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop);
 	}
@@ -255,7 +254,7 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public Pair<Long[], Integer[]> splitTripStop(MRoute mRoute, GTrip gTrip, GTripStop gTripStop, ArrayList<MTrip> splitTrips, GSpec routeGTFS) {
 		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
-			return SplitUtils.splitTripStop(mRoute, gTrip, gTripStop, routeGTFS, ALL_ROUTE_TRIPS2.get(mRoute.getId()));
+			return SplitUtils.splitTripStop(mRoute, gTrip, gTripStop, routeGTFS, ALL_ROUTE_TRIPS2.get(mRoute.getId()), this);
 		}
 		return super.splitTripStop(mRoute, gTrip, gTripStop, splitTrips, routeGTFS);
 	}
@@ -300,12 +299,14 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		} else if (mTrip.getRouteId() == 20L) {
 			if (Arrays.asList( //
 					"Vlg", //
+					"Vlg" + "-Via Function Jct", //
 					"Via Function Jct" //
 			).containsAll(headsignsValues)) {
 				mTrip.setHeadsignString("Vlg", mTrip.getHeadsignId());
 				return true;
 			} else if (Arrays.asList( //
 					"Cheakamus", //
+					"Cheakamus" + "- Via Function Jct", //
 					"Via Function Jct" //
 			).containsAll(headsignsValues)) {
 				mTrip.setHeadsignString("Cheakamus", mTrip.getHeadsignId());
@@ -314,12 +315,14 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		} else if (mTrip.getRouteId() == 20L + RID_ENDS_WITH_X) { // 20X
 			if (Arrays.asList( //
 					"Vlg Exp", //
+					"Vlg Exp" + "- Via Function Jct", //
 					"Via Function Jct" //
 			).containsAll(headsignsValues)) {
 				mTrip.setHeadsignString("Vlg Exp", mTrip.getHeadsignId());
 				return true;
 			} else if (Arrays.asList( //
 					"Cheakamus Exp", //
+					"Cheakamus Exp" + "- Via Function Jct", //
 					"Via Function Jct" //
 			).containsAll(headsignsValues)) {
 				mTrip.setHeadsignString("Cheakamus Exp", mTrip.getHeadsignId());
@@ -328,12 +331,15 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		} else if (mTrip.getRouteId() == 30L) {
 			if (Arrays.asList( //
 					"Alpine / Emerald", //
-					"Emerald" //
+					"Alpine / Emerald" + "- Via Nesters", //
+					"Emerald", //
+					"Emerald" + "- Via Nesters" //
 			).containsAll(headsignsValues)) {
 				mTrip.setHeadsignString("Emerald", mTrip.getHeadsignId());
 				return true;
 			} else if (Arrays.asList( //
 					"Vlg", //
+					"Vlg" + "- Via Alpine", //
 					"Via Alpine" //
 			).containsAll(headsignsValues)) {
 				mTrip.setHeadsignString("Vlg", mTrip.getHeadsignId());
@@ -354,13 +360,7 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	private static final Pattern FREE_SHUTTLE = Pattern.compile("((^|\\W){1}(free shuttle)(\\W|$){1})", Pattern.CASE_INSENSITIVE);
 
-	private static final Pattern AND = Pattern.compile("( and )", Pattern.CASE_INSENSITIVE);
-	private static final String AND_REPLACEMENT = " & ";
-
-	private static final Pattern CLEAN_P1 = Pattern.compile("[\\s]*\\([\\s]*");
-	private static final String CLEAN_P1_REPLACEMENT = " (";
-	private static final Pattern CLEAN_P2 = Pattern.compile("[\\s]*\\)[\\s]*");
-	private static final String CLEAN_P2_REPLACEMENT = ") ";
+	private static final Pattern ENDS_WITH_DASH = Pattern.compile("([\\s]*[\\-]+[\\s]*$)", Pattern.CASE_INSENSITIVE);
 
 	@Override
 	public String cleanTripHeadsign(String tripHeadsign) {
@@ -371,9 +371,10 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		tripHeadsign = FREE_SHUTTLE.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
 		tripHeadsign = ENDS_WITH_VIA.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
 		tripHeadsign = STARTS_WITH_TO.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
-		tripHeadsign = AND.matcher(tripHeadsign).replaceAll(AND_REPLACEMENT);
-		tripHeadsign = CLEAN_P1.matcher(tripHeadsign).replaceAll(CLEAN_P1_REPLACEMENT);
-		tripHeadsign = CLEAN_P2.matcher(tripHeadsign).replaceAll(CLEAN_P2_REPLACEMENT);
+		tripHeadsign = ENDS_WITH_DASH.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
+		tripHeadsign = CleanUtils.CLEAN_AND.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
+		tripHeadsign = CleanUtils.CLEAN_PARENTHESE1.matcher(tripHeadsign).replaceAll(CleanUtils.CLEAN_PARENTHESE1_REPLACEMENT);
+		tripHeadsign = CleanUtils.CLEAN_PARENTHESE2.matcher(tripHeadsign).replaceAll(CleanUtils.CLEAN_PARENTHESE2_REPLACEMENT);
 		tripHeadsign = CleanUtils.cleanSlashes(tripHeadsign);
 		tripHeadsign = CleanUtils.cleanStreetTypes(tripHeadsign);
 		tripHeadsign = CleanUtils.cleanNumbers(tripHeadsign);

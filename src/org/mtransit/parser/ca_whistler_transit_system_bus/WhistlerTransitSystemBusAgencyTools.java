@@ -196,6 +196,54 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	private static HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
 	static {
 		HashMap<Long, RouteTripSpec> map2 = new HashMap<Long, RouteTripSpec>();
+		map2.put(20L, new RouteTripSpec(20L, //
+				0, MTrip.HEADSIGN_TYPE_STRING, "Vlg", // Gondola
+				1, MTrip.HEADSIGN_TYPE_STRING, "Cheakamus") //
+				.addTripSort(0, //
+						Arrays.asList(new String[] { //
+						"102686", // Legacy at Mount Fee (WB)
+								"102691", // == !=
+								"102681", // != <>
+								"102680", // != <>
+								"102677", // != <>
+								"102676", // != <>
+								"102678", // != <>
+								"102679", // != <>
+								"102682", // != <>
+								"102673", // == !=
+								"102713", // Gondola Exchange Bay 2
+						})) //
+				.addTripSort(1, //
+						Arrays.asList(new String[] { //
+						"102713", // Gondola Exchange Bay 2
+								"102645", // ==
+								"102681", // != <>
+								"102680", // != <>
+								"102677", // != <>
+								"102676", // != <>
+								"102678", // != <>
+								"102679", // != <>
+								"102682", // != <>
+								"102683", // ==
+								"102686", // Legacy at Mount Fee (WB)
+						})) //
+				.compileBothTripSort());
+		map2.put(31L, new RouteTripSpec(31L, //
+				0, MTrip.HEADSIGN_TYPE_STRING, "Alpine", //
+				1, MTrip.HEADSIGN_TYPE_STRING, "Whistler") // Gondola
+				.addTripSort(0, //
+						Arrays.asList(new String[] { //
+						"102714", // Gondola Exchange Bay 3
+								"102503", // ++
+								"102622", // Westbound Alpine at Rainbow
+						})) //
+				.addTripSort(1, //
+						Arrays.asList(new String[] { //
+						"102622", // Westbound Alpine at Rainbow
+								"102634", // ++
+								"102714", // Gondola Exchange Bay 3
+						})) //
+				.compileBothTripSort());
 		map2.put(99L, new RouteTripSpec(99L, //
 				0, MTrip.HEADSIGN_TYPE_STRING, "Pemberton", //
 				1, MTrip.HEADSIGN_TYPE_STRING, "Whistler") //
@@ -214,22 +262,6 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 								"102600", // <>
 								"102589", // !=
 								"102713", // Gondola Exchange Bay 2
-						})) //
-				.compileBothTripSort());
-		map2.put(31L, new RouteTripSpec(31L, //
-				0, MTrip.HEADSIGN_TYPE_STRING, "Alpine", //
-				1, MTrip.HEADSIGN_TYPE_STRING, "Whistler") // Gondola
-				.addTripSort(0, //
-						Arrays.asList(new String[] { //
-						"102714", // Gondola Exchange Bay 3
-								"102503", // ++
-								"102622", // Westbound Alpine at Rainbow
-						})) //
-				.addTripSort(1, //
-						Arrays.asList(new String[] { //
-						"102622", // Westbound Alpine at Rainbow
-								"102634", // ++
-								"102714", // Gondola Exchange Bay 3
 						})) //
 				.compileBothTripSort());
 		ALL_ROUTE_TRIPS2 = map2;

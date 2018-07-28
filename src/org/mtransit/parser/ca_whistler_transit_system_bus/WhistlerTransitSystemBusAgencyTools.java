@@ -53,6 +53,11 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		System.out.printf("\nGenerating Whistler Transit System bus data... DONE in %s.\n", Utils.getPrettyDuration(System.currentTimeMillis() - start));
 	}
 
+	@Override
+	public boolean excludingAll() {
+		return this.serviceIds != null && this.serviceIds.isEmpty();
+	}
+
 	private static final String INCLUDE_ONLY_SERVICE_ID_CONTAINS = null;
 	private static final String INCLUDE_ONLY_SERVICE_ID_CONTAINS2 = null;
 	private static final String INCLUDE_ONLY_SERVICE_ID_CONTAINS3 = null;

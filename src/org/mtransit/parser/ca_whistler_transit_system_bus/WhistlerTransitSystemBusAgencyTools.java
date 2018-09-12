@@ -24,12 +24,14 @@ import org.mtransit.parser.gtfs.data.GStop;
 import org.mtransit.parser.gtfs.data.GTrip;
 import org.mtransit.parser.gtfs.data.GTripStop;
 import org.mtransit.parser.mt.data.MAgency;
+import org.mtransit.parser.mt.data.MDirectionType;
 import org.mtransit.parser.mt.data.MRoute;
 import org.mtransit.parser.mt.data.MTrip;
 import org.mtransit.parser.mt.data.MTripStop;
 
 // https://bctransit.com/*/footer/open-data
 // https://bctransit.com/servlet/bctransit/data/GTFS - Whistler
+// https://whistler.mapstrat.com/current/google_transit.zip
 public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	public static void main(String[] args) {
@@ -58,17 +60,9 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		return this.serviceIds != null && this.serviceIds.isEmpty();
 	}
 
-	private static final String INCLUDE_ONLY_SERVICE_ID_CONTAINS = null;
-	private static final String INCLUDE_ONLY_SERVICE_ID_CONTAINS2 = null;
-	private static final String INCLUDE_ONLY_SERVICE_ID_CONTAINS3 = null;
 
 	@Override
 	public boolean excludeCalendar(GCalendar gCalendar) {
-		if (INCLUDE_ONLY_SERVICE_ID_CONTAINS != null && !gCalendar.getServiceId().contains(INCLUDE_ONLY_SERVICE_ID_CONTAINS)
-				&& INCLUDE_ONLY_SERVICE_ID_CONTAINS2 != null && !gCalendar.getServiceId().contains(INCLUDE_ONLY_SERVICE_ID_CONTAINS2)
-				&& INCLUDE_ONLY_SERVICE_ID_CONTAINS3 != null && !gCalendar.getServiceId().contains(INCLUDE_ONLY_SERVICE_ID_CONTAINS3)) {
-			return true;
-		}
 		if (this.serviceIds != null) {
 			return excludeUselessCalendar(gCalendar, this.serviceIds);
 		}
@@ -77,18 +71,13 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public boolean excludeCalendarDate(GCalendarDate gCalendarDates) {
-		if (INCLUDE_ONLY_SERVICE_ID_CONTAINS != null && !gCalendarDates.getServiceId().contains(INCLUDE_ONLY_SERVICE_ID_CONTAINS)
-				&& INCLUDE_ONLY_SERVICE_ID_CONTAINS2 != null && !gCalendarDates.getServiceId().contains(INCLUDE_ONLY_SERVICE_ID_CONTAINS2)
-				&& INCLUDE_ONLY_SERVICE_ID_CONTAINS3 != null && !gCalendarDates.getServiceId().contains(INCLUDE_ONLY_SERVICE_ID_CONTAINS3)) {
-			return true;
-		}
 		if (this.serviceIds != null) {
 			return excludeUselessCalendarDate(gCalendarDates, this.serviceIds);
 		}
 		return super.excludeCalendarDate(gCalendarDates);
 	}
 
-	private static final String INCLUDE_AGENCY_ID = "3"; // Whistler Transit System only
+	private static final String INCLUDE_AGENCY_ID = "1"; // Whistler Transit System only
 
 	@Override
 	public boolean excludeRoute(GRoute gRoute) {
@@ -100,11 +89,6 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public boolean excludeTrip(GTrip gTrip) {
-		if (INCLUDE_ONLY_SERVICE_ID_CONTAINS != null && !gTrip.getServiceId().contains(INCLUDE_ONLY_SERVICE_ID_CONTAINS)
-				&& INCLUDE_ONLY_SERVICE_ID_CONTAINS2 != null && !gTrip.getServiceId().contains(INCLUDE_ONLY_SERVICE_ID_CONTAINS2)
-				&& INCLUDE_ONLY_SERVICE_ID_CONTAINS3 != null && !gTrip.getServiceId().contains(INCLUDE_ONLY_SERVICE_ID_CONTAINS3)) {
-			return true;
-		}
 		if (this.serviceIds != null) {
 			return excludeUselessTrip(gTrip, this.serviceIds);
 		}
@@ -144,6 +128,9 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public String getRouteLongName(GRoute gRoute) {
 		String routeLongName = gRoute.getRouteLongName();
+		if (StringUtils.isEmpty(routeLongName)) {
+			routeLongName = gRoute.getRouteDesc();
+		}
 		routeLongName = CleanUtils.cleanSlashes(routeLongName);
 		routeLongName = CleanUtils.cleanNumbers(routeLongName);
 		routeLongName = CleanUtils.cleanStreetTypes(routeLongName);
@@ -198,77 +185,13 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		return super.getRouteColor(gRoute);
 	}
 
+	// TRIP DIRECTION ID USED BY REAL-TIME API
+	private static final int CLOCKWISE_0 = 0;
+	private static final int COUNTERCLOCKWISE_1 = 1;
+
 	private static HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
 	static {
 		HashMap<Long, RouteTripSpec> map2 = new HashMap<Long, RouteTripSpec>();
-		map2.put(20L, new RouteTripSpec(20L, //
-				0, MTrip.HEADSIGN_TYPE_STRING, "Vlg", // Gondola
-				1, MTrip.HEADSIGN_TYPE_STRING, "Cheakamus") //
-				.addTripSort(0, //
-						Arrays.asList(new String[] { //
-						"102686", // Legacy at Mount Fee (WB)
-								"102691", // == !=
-								"102681", // != <>
-								"102680", // != <>
-								"102677", // != <>
-								"102676", // != <>
-								"102678", // != <>
-								"102679", // != <>
-								"102682", // != <>
-								"102673", // == !=
-								"102713", // Gondola Exchange Bay 2
-						})) //
-				.addTripSort(1, //
-						Arrays.asList(new String[] { //
-						"102713", // Gondola Exchange Bay 2
-								"102645", // ==
-								"102681", // != <>
-								"102680", // != <>
-								"102677", // != <>
-								"102676", // != <>
-								"102678", // != <>
-								"102679", // != <>
-								"102682", // != <>
-								"102683", // ==
-								"102686", // Legacy at Mount Fee (WB)
-						})) //
-				.compileBothTripSort());
-		map2.put(31L, new RouteTripSpec(31L, //
-				0, MTrip.HEADSIGN_TYPE_STRING, "Alpine", //
-				1, MTrip.HEADSIGN_TYPE_STRING, "Whistler") // Gondola
-				.addTripSort(0, //
-						Arrays.asList(new String[] { //
-						"102714", // Gondola Exchange Bay 3
-								"102503", // ++
-								"102622", // Westbound Alpine at Rainbow
-						})) //
-				.addTripSort(1, //
-						Arrays.asList(new String[] { //
-						"102622", // Westbound Alpine at Rainbow
-								"102634", // ++
-								"102714", // Gondola Exchange Bay 3
-						})) //
-				.compileBothTripSort());
-		map2.put(99L, new RouteTripSpec(99L, //
-				0, MTrip.HEADSIGN_TYPE_STRING, "Pemberton", //
-				1, MTrip.HEADSIGN_TYPE_STRING, "Whistler") //
-				.addTripSort(0, //
-						Arrays.asList(new String[] { //
-						"102713", // Gondola Exchange Bay 2
-								"102594", // != ==
-								"102600", // <> !=
-								"102620", // != ==
-								"102843", // Northbound Frontier at Birch
-						})) //
-				.addTripSort(1, //
-						Arrays.asList(new String[] { //
-						"102843", // Northbound Frontier at Birch
-								"102619", // !=
-								"102600", // <>
-								"102589", // !=
-								"102713", // Gondola Exchange Bay 2
-						})) //
-				.compileBothTripSort());
 		ALL_ROUTE_TRIPS2 = map2;
 	}
 
@@ -301,7 +224,109 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
 			return; // split
 		}
-		mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), gTrip.getDirectionId());
+		if (mRoute.getId() == 5L) {
+			if (gTrip.getDirectionId() == 0) { // Upper Vlg - Benchlands - CLOCKWISE
+				if ("Upper Vlg - Benchlands - Free Shuttle".equalsIgnoreCase(gTrip.getTripHeadsign())) {
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), CLOCKWISE_0);
+					return;
+				}
+			}
+		} else if (mRoute.getId() == 6L) {
+			if (gTrip.getDirectionId() == 1) { // Tapley''s-Blueberry - COUNTERCLOCKWISE
+				if ("Tapley's-Blueberry".equalsIgnoreCase(gTrip.getTripHeadsign())) {
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), COUNTERCLOCKWISE_1);
+					return;
+				}
+			}
+		} else if (mRoute.getId() == 7L) {
+			if (gTrip.getDirectionId() == 0) { // Staff Housing - CLOCKWISE
+				if ("Staff Housing".equalsIgnoreCase(gTrip.getTripHeadsign())) {
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), CLOCKWISE_0);
+					return;
+				}
+			}
+		} else if (mRoute.getId() == 20L) {
+			if (gTrip.getDirectionId() == 0) { // Village - NORTH
+				if ("To Village".equalsIgnoreCase(gTrip.getTripHeadsign()) //
+						|| "To Village-Via Function Jct".equalsIgnoreCase(gTrip.getTripHeadsign())) {
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), MDirectionType.NORTH.intValue());
+					return;
+				}
+			} else if (gTrip.getDirectionId() == 1) { // Cheakamus - SOUTH
+				if ("Cheakamus".equalsIgnoreCase(gTrip.getTripHeadsign()) //
+						|| "Cheakamus- Via Function Jct".equalsIgnoreCase(gTrip.getTripHeadsign())) {
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), MDirectionType.SOUTH.intValue());
+					return;
+				}
+			}
+		} else if (mRoute.getId() == 20L + RID_ENDS_WITH_X) { // 20X
+			if (gTrip.getDirectionId() == 0) { // Village - NORTH
+				if ("Village Exp".equalsIgnoreCase(gTrip.getTripHeadsign()) //
+						|| "Village Exp- Via Function Jct".equalsIgnoreCase(gTrip.getTripHeadsign())) {
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), MDirectionType.NORTH.intValue());
+					return;
+				}
+			} else if (gTrip.getDirectionId() == 1) { // Cheakamus - SOUTH
+				if ("Cheakamus Exp".equalsIgnoreCase(gTrip.getTripHeadsign()) //
+						|| "Cheakamus Exp- Via Function Jct".equalsIgnoreCase(gTrip.getTripHeadsign())) {
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), MDirectionType.SOUTH.intValue());
+					return;
+				}
+			}
+		} else if (mRoute.getId() == 21L) {
+			if (gTrip.getDirectionId() == 0) { // Village - NORTH
+				if ("To Village".equalsIgnoreCase(gTrip.getTripHeadsign())) {
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), MDirectionType.NORTH.intValue());
+					return;
+				}
+			} else if (gTrip.getDirectionId() == 1) { // Spring Creek - SOUTH
+				if ("Spring Creek".equalsIgnoreCase(gTrip.getTripHeadsign())) {
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), MDirectionType.SOUTH.intValue());
+					return;
+				}
+			}
+		} else if (mRoute.getId() == 30L) {
+			if (gTrip.getDirectionId() == 0) { // Alpine/Emerald - NORTH
+				if ("Alpine/Emerald- Via Nesters".equalsIgnoreCase(gTrip.getTripHeadsign()) //
+						|| "Emerald- Via Nesters".equalsIgnoreCase(gTrip.getTripHeadsign())) {
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), MDirectionType.NORTH.intValue());
+					return;
+				}
+			} else if (gTrip.getDirectionId() == 1) { // Village - SOUTH
+				if ("To Village".equalsIgnoreCase(gTrip.getTripHeadsign()) //
+						|| "To Village- Via Alpine".equalsIgnoreCase(gTrip.getTripHeadsign())) {
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), MDirectionType.SOUTH.intValue());
+					return;
+				}
+			}
+		} else if (mRoute.getId() == 32L) {
+			if (gTrip.getDirectionId() == 0) { // Emerald - NORTH
+				if ("Emerald- Via Spruve Grv".equalsIgnoreCase(gTrip.getTripHeadsign())) {
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), MDirectionType.NORTH.intValue());
+					return;
+				}
+			} else if (gTrip.getDirectionId() == 1) { // Village - SOUTH
+				if ("To Village".equalsIgnoreCase(gTrip.getTripHeadsign())) {
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), MDirectionType.SOUTH.intValue());
+					return;
+				}
+			}
+		} else if (mRoute.getId() == 99L) {
+			if (gTrip.getDirectionId() == 0) { // Pemberton - NORTH
+				if ("Commuter- To Pemberton".equalsIgnoreCase(gTrip.getTripHeadsign())) {
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), MDirectionType.NORTH.intValue());
+					return;
+				}
+			} else if (gTrip.getDirectionId() == 1) { // Whistler - SOUTH
+				if ("Commuter- to Whistler".equalsIgnoreCase(gTrip.getTripHeadsign())) {
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), MDirectionType.SOUTH.intValue());
+					return;
+				}
+			}
+		}
+		System.out.printf("\n%s: Unexpected trips headsign for %s!\n", mTrip.getRouteId(), gTrip);
+		System.exit(-1);
+		return;
 	}
 
 	@Override
@@ -393,9 +418,11 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	private static final String EXCHANGE_REPLACEMENT = "$2" + EXCH + "$4";
 
 	private static final Pattern ENDS_WITH_VIA = Pattern.compile("([\\s]?[\\-]?[\\s]?via .*$)", Pattern.CASE_INSENSITIVE);
-	private static final Pattern STARTS_WITH_TO = Pattern.compile("(^.* to )", Pattern.CASE_INSENSITIVE);
+	private static final Pattern STARTS_WITH_TO = Pattern.compile("(^(.+ )?to )", Pattern.CASE_INSENSITIVE);
 
 	private static final Pattern FREE_SHUTTLE = Pattern.compile("((^|\\W){1}(free shuttle)(\\W|$){1})", Pattern.CASE_INSENSITIVE);
+
+	private static final Pattern EXPRESS_ = Pattern.compile("((^|\\W){1}(express|exp)(\\W|$){1})", Pattern.CASE_INSENSITIVE);
 
 	private static final Pattern ENDS_WITH_DASH = Pattern.compile("([\\s]*[\\-]+[\\s]*$)", Pattern.CASE_INSENSITIVE);
 
@@ -406,6 +433,7 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		}
 		tripHeadsign = EXCHANGE.matcher(tripHeadsign).replaceAll(EXCHANGE_REPLACEMENT);
 		tripHeadsign = FREE_SHUTTLE.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
+		tripHeadsign = EXPRESS_.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
 		tripHeadsign = ENDS_WITH_VIA.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
 		tripHeadsign = STARTS_WITH_TO.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
 		tripHeadsign = ENDS_WITH_DASH.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
@@ -431,5 +459,10 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		gStopName = CleanUtils.cleanStreetTypes(gStopName);
 		gStopName = CleanUtils.cleanNumbers(gStopName);
 		return CleanUtils.cleanLabel(gStopName);
+	}
+
+	@Override
+	public int getStopId(GStop gStop) {
+		return Integer.parseInt(gStop.getStopCode()); // use stop code as stop ID
 	}
 }

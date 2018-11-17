@@ -10,12 +10,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
+import org.mtransit.commons.StrategicMappingCommons;
 import org.mtransit.parser.CleanUtils;
 import org.mtransit.parser.DefaultAgencyTools;
 import org.mtransit.parser.Pair;
 import org.mtransit.parser.SplitUtils;
-import org.mtransit.parser.Utils;
 import org.mtransit.parser.SplitUtils.RouteTripSpec;
+import org.mtransit.parser.Utils;
 import org.mtransit.parser.gtfs.data.GCalendar;
 import org.mtransit.parser.gtfs.data.GCalendarDate;
 import org.mtransit.parser.gtfs.data.GRoute;
@@ -185,13 +186,23 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		return super.getRouteColor(gRoute);
 	}
 
-	// TRIP DIRECTION ID USED BY REAL-TIME API
-	private static final int CLOCKWISE_0 = 0;
-	private static final int COUNTERCLOCKWISE_1 = 1;
-
 	private static HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
 	static {
 		HashMap<Long, RouteTripSpec> map2 = new HashMap<Long, RouteTripSpec>();
+		map2.put(31L, new RouteTripSpec(31L, //
+				StrategicMappingCommons.NORTH, MTrip.HEADSIGN_TYPE_STRING, "Alpine", //
+				StrategicMappingCommons.SOUTH, MTrip.HEADSIGN_TYPE_STRING, "Village") //
+				.addTripSort(StrategicMappingCommons.NORTH, //
+						Arrays.asList(new String[] { //
+						"118", // "102714", // Gondola Exchange Bay 3
+								"102", // "102622", // Alpine at Rainbow (WB)
+						})) //
+				.addTripSort(StrategicMappingCommons.SOUTH, //
+						Arrays.asList(new String[] { //
+						"102", // "102622", // Alpine at Rainbow (WB)
+								"118", // "102714", // Gondola Exchange Bay 3
+						})) //
+				.compileBothTripSort());
 		ALL_ROUTE_TRIPS2 = map2;
 	}
 
@@ -224,24 +235,31 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
 			return; // split
 		}
-		if (mRoute.getId() == 5L) {
+		if (mRoute.getId() == 4L) {
+			if (gTrip.getDirectionId() == 1) { // Marketplace - Free Shuttle - ????
+				if ("Marketplace - Free Shuttle".equalsIgnoreCase(gTrip.getTripHeadsign())) {
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.COUNTERCLOCKWISE);
+					return;
+				}
+			}
+		} else if (mRoute.getId() == 5L) {
 			if (gTrip.getDirectionId() == 0) { // Upper Vlg - Benchlands - CLOCKWISE
 				if ("Upper Vlg - Benchlands - Free Shuttle".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), CLOCKWISE_0);
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.CLOCKWISE);
 					return;
 				}
 			}
 		} else if (mRoute.getId() == 6L) {
 			if (gTrip.getDirectionId() == 1) { // Tapley''s-Blueberry - COUNTERCLOCKWISE
 				if ("Tapley's-Blueberry".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), COUNTERCLOCKWISE_1);
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.COUNTERCLOCKWISE);
 					return;
 				}
 			}
 		} else if (mRoute.getId() == 7L) {
 			if (gTrip.getDirectionId() == 0) { // Staff Housing - CLOCKWISE
 				if ("Staff Housing".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), CLOCKWISE_0);
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.CLOCKWISE);
 					return;
 				}
 			}
@@ -249,13 +267,13 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 			if (gTrip.getDirectionId() == 0) { // Village - NORTH
 				if ("To Village".equalsIgnoreCase(gTrip.getTripHeadsign()) //
 						|| "To Village-Via Function Jct".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), MDirectionType.NORTH.intValue());
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.NORTH);
 					return;
 				}
 			} else if (gTrip.getDirectionId() == 1) { // Cheakamus - SOUTH
 				if ("Cheakamus".equalsIgnoreCase(gTrip.getTripHeadsign()) //
 						|| "Cheakamus- Via Function Jct".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), MDirectionType.SOUTH.intValue());
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.SOUTH);
 					return;
 				}
 			}
@@ -263,25 +281,37 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 			if (gTrip.getDirectionId() == 0) { // Village - NORTH
 				if ("Village Exp".equalsIgnoreCase(gTrip.getTripHeadsign()) //
 						|| "Village Exp- Via Function Jct".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), MDirectionType.NORTH.intValue());
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.NORTH);
 					return;
 				}
 			} else if (gTrip.getDirectionId() == 1) { // Cheakamus - SOUTH
 				if ("Cheakamus Exp".equalsIgnoreCase(gTrip.getTripHeadsign()) //
 						|| "Cheakamus Exp- Via Function Jct".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), MDirectionType.SOUTH.intValue());
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.SOUTH);
 					return;
 				}
 			}
 		} else if (mRoute.getId() == 21L) {
 			if (gTrip.getDirectionId() == 0) { // Village - NORTH
 				if ("To Village".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), MDirectionType.NORTH.intValue());
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.NORTH);
 					return;
 				}
 			} else if (gTrip.getDirectionId() == 1) { // Spring Creek - SOUTH
 				if ("Spring Creek".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), MDirectionType.SOUTH.intValue());
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.SOUTH);
+					return;
+				}
+			}
+		} else if (mRoute.getId() == 25L) {
+			if (gTrip.getDirectionId() == 0) { // Village - NORTH
+				if ("To Village".equalsIgnoreCase(gTrip.getTripHeadsign())) {
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.NORTH);
+					return;
+				}
+			} else if (gTrip.getDirectionId() == 1) { // Whistler Creek - SOUTH
+				if ("Whistler Creek".equalsIgnoreCase(gTrip.getTripHeadsign())) {
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.SOUTH);
 					return;
 				}
 			}
@@ -289,37 +319,37 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 			if (gTrip.getDirectionId() == 0) { // Alpine/Emerald - NORTH
 				if ("Alpine/Emerald- Via Nesters".equalsIgnoreCase(gTrip.getTripHeadsign()) //
 						|| "Emerald- Via Nesters".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), MDirectionType.NORTH.intValue());
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.NORTH);
 					return;
 				}
 			} else if (gTrip.getDirectionId() == 1) { // Village - SOUTH
 				if ("To Village".equalsIgnoreCase(gTrip.getTripHeadsign()) //
 						|| "To Village- Via Alpine".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), MDirectionType.SOUTH.intValue());
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.SOUTH);
 					return;
 				}
 			}
 		} else if (mRoute.getId() == 32L) {
 			if (gTrip.getDirectionId() == 0) { // Emerald - NORTH
 				if ("Emerald- Via Spruve Grv".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), MDirectionType.NORTH.intValue());
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.NORTH);
 					return;
 				}
 			} else if (gTrip.getDirectionId() == 1) { // Village - SOUTH
 				if ("To Village".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), MDirectionType.SOUTH.intValue());
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.SOUTH);
 					return;
 				}
 			}
 		} else if (mRoute.getId() == 99L) {
 			if (gTrip.getDirectionId() == 0) { // Pemberton - NORTH
 				if ("Commuter- To Pemberton".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), MDirectionType.NORTH.intValue());
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.NORTH);
 					return;
 				}
 			} else if (gTrip.getDirectionId() == 1) { // Whistler - SOUTH
 				if ("Commuter- to Whistler".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), MDirectionType.SOUTH.intValue());
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.SOUTH);
 					return;
 				}
 			}
@@ -331,10 +361,12 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public boolean mergeHeadsign(MTrip mTrip, MTrip mTripToMerge) {
+		if (MTrip.mergeEmpty(mTrip, mTripToMerge)) {
+			return true;
+		}
 		List<String> headsignsValues = Arrays.asList(mTrip.getHeadsignValue(), mTripToMerge.getHeadsignValue());
 		if (mTrip.getRouteId() == 1L) {
 			if (Arrays.asList( //
-					StringUtils.EMPTY, // (empty)
 					"Alpine", //
 					"Emerald", //
 					"Vlg" //

@@ -193,13 +193,13 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 				StrategicMappingCommons.SOUTH, MTrip.HEADSIGN_TYPE_STRING, "Village") //
 				.addTripSort(StrategicMappingCommons.NORTH, //
 						Arrays.asList(new String[] { //
-						"118", // "102714", // Gondola Exchange Bay 3
-								"102", // "102622", // Alpine at Rainbow (WB)
+						Stops.ALL_STOPS.get("102714"), // Gondola Exchange Bay 3
+								Stops.ALL_STOPS.get("102622"), // Alpine at Rainbow (WB)
 						})) //
 				.addTripSort(StrategicMappingCommons.SOUTH, //
 						Arrays.asList(new String[] { //
-						"102", // "102622", // Alpine at Rainbow (WB)
-								"118", // "102714", // Gondola Exchange Bay 3
+						Stops.ALL_STOPS.get("102622"), // Alpine at Rainbow (WB)
+								Stops.ALL_STOPS.get("102714"), // Gondola Exchange Bay 3
 						})) //
 				.compileBothTripSort());
 		ALL_ROUTE_TRIPS2 = map2;
@@ -235,7 +235,7 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 			return; // split
 		}
 		if (mRoute.getId() == 4L) {
-			if (gTrip.getDirectionId() == 1) { // Marketplace - Free Shuttle - ????
+			if (gTrip.getDirectionId() == 1) { // Marketplace - Free Shuttle - COUNTERCLOCKWISE
 				if ("Marketplace - Free Shuttle".equalsIgnoreCase(gTrip.getTripHeadsign())) {
 					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.COUNTERCLOCKWISE);
 					return;

@@ -193,13 +193,13 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 				StrategicMappingCommons.SOUTH, MTrip.HEADSIGN_TYPE_STRING, "Village") //
 				.addTripSort(StrategicMappingCommons.NORTH, //
 						Arrays.asList(new String[] { //
-						Stops.ALL_STOPS.get("102714"), // Gondola Exchange Bay 3
-								Stops.ALL_STOPS.get("102622"), // Alpine at Rainbow (WB)
+						Stops.ALL_STOPS.get("102714"), Stops2.ALL_STOPS2.get("102714"), // Gondola Exchange Bay 3
+								Stops.ALL_STOPS.get("102622"), Stops2.ALL_STOPS2.get("102622"), // Alpine at Rainbow (WB)
 						})) //
 				.addTripSort(StrategicMappingCommons.SOUTH, //
 						Arrays.asList(new String[] { //
-						Stops.ALL_STOPS.get("102622"), // Alpine at Rainbow (WB)
-								Stops.ALL_STOPS.get("102714"), // Gondola Exchange Bay 3
+						Stops.ALL_STOPS.get("102622"), Stops2.ALL_STOPS2.get("102622"), // Alpine at Rainbow (WB)
+								Stops.ALL_STOPS.get("102714"), Stops2.ALL_STOPS2.get("102714"), // Gondola Exchange Bay 3
 						})) //
 				.compileBothTripSort());
 		ALL_ROUTE_TRIPS2 = map2;
@@ -260,6 +260,23 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 				if ("Staff Housing".equalsIgnoreCase(gTrip.getTripHeadsign())) {
 					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.CLOCKWISE);
 					return;
+				}
+			}
+		} else if (mRoute.getId() == 10L) {
+			if (isGoodEnoughAccepted()) {
+				if (false) {
+					// TODO check
+				}
+				if (gTrip.getDirectionId() == 0) { // Emerald - NORTH
+					if ("Valley Express to Emerald".equalsIgnoreCase(gTrip.getTripHeadsign())) {
+						mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.NORTH);
+						return;
+					}
+				} else if (gTrip.getDirectionId() == 1) { // Cheakamus - SOUTH
+					if ("Valley Express to Cheakamus".equalsIgnoreCase(gTrip.getTripHeadsign())) {
+						mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.SOUTH);
+						return;
+					}
 				}
 			}
 		} else if (mRoute.getId() == 20L) {

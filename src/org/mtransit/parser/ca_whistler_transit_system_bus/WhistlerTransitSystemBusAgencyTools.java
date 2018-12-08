@@ -268,12 +268,18 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 					// TODO check
 				}
 				if (gTrip.getDirectionId() == 0) { // Emerald - NORTH
-					if ("Valley Express to Emerald".equalsIgnoreCase(gTrip.getTripHeadsign())) {
+					if (Arrays.asList( //
+							"Valley Express to Emerald", //
+							"Emerald Via Function Jct-Valley Exp" //
+					).contains(gTrip.getTripHeadsign())) {
 						mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.NORTH);
 						return;
 					}
 				} else if (gTrip.getDirectionId() == 1) { // Cheakamus - SOUTH
-					if ("Valley Express to Cheakamus".equalsIgnoreCase(gTrip.getTripHeadsign())) {
+					if (Arrays.asList( //
+							"Valley Express to Cheakamus", //
+							"Cheakamus Via Function Jct-Valley Exp" //
+					).contains(gTrip.getTripHeadsign())) {
 						mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.SOUTH);
 						return;
 					}
@@ -466,11 +472,13 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	private static final String EXCHANGE_REPLACEMENT = "$2" + EXCH + "$4";
 
 	private static final Pattern ENDS_WITH_VIA = Pattern.compile("([\\s]?[\\-]?[\\s]?via .*$)", Pattern.CASE_INSENSITIVE);
-	private static final Pattern STARTS_WITH_TO = Pattern.compile("(^(.+ )?to )", Pattern.CASE_INSENSITIVE);
+	private static final Pattern STARTS_WITH_TO = Pattern.compile("(^(.* to|to) )", Pattern.CASE_INSENSITIVE);
 
-	private static final Pattern FREE_SHUTTLE = Pattern.compile("((^|\\W){1}(free shuttle)(\\W|$){1})", Pattern.CASE_INSENSITIVE);
+	private static final Pattern FREE_SHUTTLE_ = Pattern.compile("((^|\\W){1}(free shuttle)(\\W|$){1})", Pattern.CASE_INSENSITIVE);
+	private static final String FREE_SHUTTLE_REPLACEMENT = "$2" + StringUtils.EMPTY + "$4";
 
 	private static final Pattern EXPRESS_ = Pattern.compile("((^|\\W){1}(express|exp)(\\W|$){1})", Pattern.CASE_INSENSITIVE);
+	private static final String EXPRESS_REPLACEMENT = "$2" + StringUtils.EMPTY + "$4";
 
 	private static final Pattern ENDS_WITH_DASH = Pattern.compile("([\\s]*[\\-]+[\\s]*$)", Pattern.CASE_INSENSITIVE);
 
@@ -480,12 +488,12 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 			tripHeadsign = tripHeadsign.toLowerCase(Locale.ENGLISH);
 		}
 		tripHeadsign = EXCHANGE.matcher(tripHeadsign).replaceAll(EXCHANGE_REPLACEMENT);
-		tripHeadsign = FREE_SHUTTLE.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
-		tripHeadsign = EXPRESS_.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
+		tripHeadsign = FREE_SHUTTLE_.matcher(tripHeadsign).replaceAll(FREE_SHUTTLE_REPLACEMENT);
+		tripHeadsign = EXPRESS_.matcher(tripHeadsign).replaceAll(EXPRESS_REPLACEMENT);
 		tripHeadsign = ENDS_WITH_VIA.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
 		tripHeadsign = STARTS_WITH_TO.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
 		tripHeadsign = ENDS_WITH_DASH.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
-		tripHeadsign = CleanUtils.CLEAN_AND.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
+		tripHeadsign = CleanUtils.CLEAN_AND.matcher(tripHeadsign).replaceAll(CleanUtils.CLEAN_AND_REPLACEMENT);
 		tripHeadsign = CleanUtils.CLEAN_PARENTHESE1.matcher(tripHeadsign).replaceAll(CleanUtils.CLEAN_PARENTHESE1_REPLACEMENT);
 		tripHeadsign = CleanUtils.CLEAN_PARENTHESE2.matcher(tripHeadsign).replaceAll(CleanUtils.CLEAN_PARENTHESE2_REPLACEMENT);
 		tripHeadsign = CleanUtils.cleanSlashes(tripHeadsign);

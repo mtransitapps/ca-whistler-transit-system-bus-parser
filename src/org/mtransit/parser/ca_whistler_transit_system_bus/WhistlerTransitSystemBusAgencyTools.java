@@ -149,34 +149,36 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public String getRouteColor(GRoute gRoute) {
-		if (StringUtils.isEmpty(gRoute.getRouteColor())) {
+		String routeColor = gRoute.getRouteColor();
+		if ("000000".equals(routeColor)) {
+			routeColor = null; // ignore black
+		}
+		if (StringUtils.isEmpty(routeColor)) {
 			if (!Utils.isDigitsOnly(gRoute.getRouteShortName())) {
 				if ("20X".equalsIgnoreCase(gRoute.getRouteShortName())) {
-					return "0C4D8C";
+					return "004B8D";
 				} else if ("25X".equalsIgnoreCase(gRoute.getRouteShortName())) {
-					return "EB1D8D";
+					return "EC1A8D";
 				}
 			}
 			int rsn = Integer.parseInt(gRoute.getRouteShortName());
 			switch (rsn) {
 			// @formatter:off
-			case 4: return "00AA4F";
-			case 5: return "8E0D3A";
-			case 6: return "FDC215";
-			case 7: return "B3AA7E";
-			case 8: return "F49AC1";
-			case 20: return "0C4D8C";
-			case 21: return "F68A20";
-			case 25: return "EB1D8D";
-			case 30: return "27ABE2";
-			case 31: return "A44499";
-			case 32: return "8CC640";
-			case 99: return "5C87A1";
+			case 4: return "00A84F";
+			case 5: return "8D0B3A";
+			case 6: return "FFC10E";
+			case 7: return "B2A97E";
+			case 8: return "F399C0";
+			case 10: return AGENCY_COLOR_BLUE; // TODO
+			case 20: return "004B8D";
+			case 21: return "F7921E";
+			case 25: return "EC1A8D";
+			case 30: return "00ADEE";
+			case 31: return "A54499";
+			case 32: return "8BC53F";
+			case 99: return "5D86A0";
 			// @formatter:on
 			default:
-				if (super.isGoodEnoughAccepted()) {
-					return AGENCY_COLOR_BLUE;
-				}
 				System.out.printf("\nUnexpected route color %s!\n", gRoute);
 				System.exit(-1);
 				return null;

@@ -265,26 +265,21 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 				}
 			}
 		} else if (mRoute.getId() == 10L) {
-			if (isGoodEnoughAccepted()) {
-				if (false) {
-					// TODO check
+			if (gTrip.getDirectionId() == 0) { // Emerald - NORTH
+				if (Arrays.asList( //
+						"Valley Express to Emerald", //
+						"Emerald Via Function Jct-Valley Exp" //
+				).contains(gTrip.getTripHeadsign())) {
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.NORTH);
+					return;
 				}
-				if (gTrip.getDirectionId() == 0) { // Emerald - NORTH
-					if (Arrays.asList( //
-							"Valley Express to Emerald", //
-							"Emerald Via Function Jct-Valley Exp" //
-					).contains(gTrip.getTripHeadsign())) {
-						mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.NORTH);
-						return;
-					}
-				} else if (gTrip.getDirectionId() == 1) { // Cheakamus - SOUTH
-					if (Arrays.asList( //
-							"Valley Express to Cheakamus", //
-							"Cheakamus Via Function Jct-Valley Exp" //
-					).contains(gTrip.getTripHeadsign())) {
-						mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.SOUTH);
-						return;
-					}
+			} else if (gTrip.getDirectionId() == 1) { // Cheakamus - SOUTH
+				if (Arrays.asList( //
+						"Valley Express to Cheakamus", //
+						"Cheakamus Via Function Jct-Valley Exp" //
+				).contains(gTrip.getTripHeadsign())) {
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.SOUTH);
+					return;
 				}
 			}
 		} else if (mRoute.getId() == 20L) {

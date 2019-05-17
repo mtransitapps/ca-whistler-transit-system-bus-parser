@@ -264,6 +264,15 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 					return;
 				}
 			}
+		} else if (mRoute.getId() == 8L) {
+			if (isGoodEnoughAccepted()) {
+				if (gTrip.getDirectionId() == 1) { // ??? - CLOCKWISE
+					if ("Lost Lake Shuttle - Free Service".equalsIgnoreCase(gTrip.getTripHeadsign())) {
+						mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.CLOCKWISE);
+						return;
+					}
+				}
+			}
 		} else if (mRoute.getId() == 10L) {
 			if (gTrip.getDirectionId() == 0) { // Emerald - NORTH
 				if (Arrays.asList( //
@@ -471,8 +480,8 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	private static final Pattern ENDS_WITH_VIA = Pattern.compile("([\\s]?[\\-]?[\\s]?via .*$)", Pattern.CASE_INSENSITIVE);
 	private static final Pattern STARTS_WITH_TO = Pattern.compile("(^(.* to|to) )", Pattern.CASE_INSENSITIVE);
 
-	private static final Pattern FREE_SHUTTLE_ = Pattern.compile("((^|\\W){1}(free shuttle)(\\W|$){1})", Pattern.CASE_INSENSITIVE);
-	private static final String FREE_SHUTTLE_REPLACEMENT = "$2" + StringUtils.EMPTY + "$4";
+	private static final Pattern FREE_SHUTTLE_SERVICE = Pattern.compile("((^|\\W){1}(free (service|shuttle))(\\W|$){1})", Pattern.CASE_INSENSITIVE);
+	private static final String FREE_SHUTTLE_SERVICE_REPLACEMENT = "$2" + StringUtils.EMPTY + "$5";
 
 	private static final Pattern EXPRESS_ = Pattern.compile("((^|\\W){1}(express|exp)(\\W|$){1})", Pattern.CASE_INSENSITIVE);
 	private static final String EXPRESS_REPLACEMENT = "$2" + StringUtils.EMPTY + "$4";
@@ -485,7 +494,7 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 			tripHeadsign = tripHeadsign.toLowerCase(Locale.ENGLISH);
 		}
 		tripHeadsign = EXCHANGE.matcher(tripHeadsign).replaceAll(EXCHANGE_REPLACEMENT);
-		tripHeadsign = FREE_SHUTTLE_.matcher(tripHeadsign).replaceAll(FREE_SHUTTLE_REPLACEMENT);
+		tripHeadsign = FREE_SHUTTLE_SERVICE.matcher(tripHeadsign).replaceAll(FREE_SHUTTLE_SERVICE_REPLACEMENT);
 		tripHeadsign = EXPRESS_.matcher(tripHeadsign).replaceAll(EXPRESS_REPLACEMENT);
 		tripHeadsign = ENDS_WITH_VIA.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
 		tripHeadsign = STARTS_WITH_TO.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);

@@ -195,13 +195,13 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 				StrategicMappingCommons.SOUTH, MTrip.HEADSIGN_TYPE_STRING, "Village") //
 				.addTripSort(StrategicMappingCommons.NORTH, //
 						Arrays.asList(new String[] { //
-						Stops.ALL_STOPS.get("102714"), Stops2.ALL_STOPS2.get("102714"), // Gondola Exchange Bay 3
-								Stops.ALL_STOPS.get("102622"), Stops2.ALL_STOPS2.get("102622"), // Alpine at Rainbow (WB)
+						Stops.getALL_STOPS().get("102714"), // Gondola Exchange Bay 3
+								Stops.getALL_STOPS().get("102622"), // Alpine at Rainbow (WB)
 						})) //
 				.addTripSort(StrategicMappingCommons.SOUTH, //
 						Arrays.asList(new String[] { //
-						Stops.ALL_STOPS.get("102622"), Stops2.ALL_STOPS2.get("102622"), // Alpine at Rainbow (WB)
-								Stops.ALL_STOPS.get("102714"), Stops2.ALL_STOPS2.get("102714"), // Gondola Exchange Bay 3
+						Stops.getALL_STOPS().get("102622"), // Alpine at Rainbow (WB)
+								Stops.getALL_STOPS().get("102714"), // Gondola Exchange Bay 3
 						})) //
 				.compileBothTripSort());
 		ALL_ROUTE_TRIPS2 = map2;

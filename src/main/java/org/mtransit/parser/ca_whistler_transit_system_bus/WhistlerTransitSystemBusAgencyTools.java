@@ -190,20 +190,6 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	private static HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
 	static {
 		HashMap<Long, RouteTripSpec> map2 = new HashMap<Long, RouteTripSpec>();
-		map2.put(31L, new RouteTripSpec(31L, //
-				StrategicMappingCommons.NORTH, MTrip.HEADSIGN_TYPE_STRING, "Alpine", //
-				StrategicMappingCommons.SOUTH, MTrip.HEADSIGN_TYPE_STRING, "Village") //
-				.addTripSort(StrategicMappingCommons.NORTH, //
-						Arrays.asList(new String[] { //
-						Stops.getALL_STOPS().get("102714"), // Gondola Exchange Bay 3
-								Stops.getALL_STOPS().get("102622"), // Alpine at Rainbow (WB)
-						})) //
-				.addTripSort(StrategicMappingCommons.SOUTH, //
-						Arrays.asList(new String[] { //
-						Stops.getALL_STOPS().get("102622"), // Alpine at Rainbow (WB)
-								Stops.getALL_STOPS().get("102714"), // Gondola Exchange Bay 3
-						})) //
-				.compileBothTripSort());
 		ALL_ROUTE_TRIPS2 = map2;
 	}
 
@@ -353,6 +339,18 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 			} else if (gTrip.getDirectionId() == 1) { // Village - SOUTH
 				if ("To Village".equalsIgnoreCase(gTrip.getTripHeadsign()) //
 						|| "To Village- Via Alpine".equalsIgnoreCase(gTrip.getTripHeadsign())) {
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.SOUTH);
+					return;
+				}
+			}
+		} else if (mRoute.getId() == 31L) {
+			if (gTrip.getDirectionId() == 0) { // Alpine - NORTH
+				if ("Alpine- Via Nesters".equalsIgnoreCase(gTrip.getTripHeadsign())) {
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.NORTH);
+					return;
+				}
+			} else if (gTrip.getDirectionId() == 1) { // Village - SOUTH
+				if ("To village".equalsIgnoreCase(gTrip.getTripHeadsign())) {
 					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.SOUTH);
 					return;
 				}

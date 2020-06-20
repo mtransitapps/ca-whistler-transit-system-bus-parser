@@ -233,7 +233,9 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		this.routeIdToShortName.put(mRoute.getId(), rsn);
 		if (rsn == 4L) {
 			if (gTrip.getDirectionId() == 1) { // Marketplace - Free Shuttle - COUNTERCLOCKWISE
-				if ("Marketplace - Free Shuttle".equalsIgnoreCase(gTrip.getTripHeadsign())) {
+				if (Arrays.asList( //
+						"Marketplace - Free Shuttle" //
+				).contains(gTrip.getTripHeadsign())) {
 					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.COUNTERCLOCKWISE);
 					return;
 				}
@@ -260,7 +262,7 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 				}
 			}
 		} else if (rsn == 8L) {
-			if (isGoodEnoughAccepted()) {
+			if (true) { // #IS_GOOD_ENOUGH
 				if (gTrip.getDirectionId() == 1) { // ??? - CLOCKWISE
 					if ("Lost Lake Shuttle - Free Service".equalsIgnoreCase(gTrip.getTripHeadsign())) {
 						mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.CLOCKWISE);
@@ -389,7 +391,7 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 				}
 			}
 		}
-		MTLog.logFatal("%s: Unexpected trips head-sign for %s!", mTrip.getRouteId(), gTrip);
+		MTLog.logFatal("%s:%s Unexpected trips head-sign for %s!", mTrip.getRouteId(), mRoute.getShortName(), gTrip.toStringPlus());
 	}
 
 	@Override
@@ -487,6 +489,8 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	private static final Pattern FREE_SHUTTLE_SERVICE = Pattern.compile("((^|\\W)(free (service|shuttle))(\\W|$))", Pattern.CASE_INSENSITIVE);
 	private static final String FREE_SHUTTLE_SERVICE_REPLACEMENT = "$2" + StringUtils.EMPTY + "$5";
 
+	private static final Pattern ENDS_WITH_FREE_SERVICE = Pattern.compile("( + (free (service|shuttle))$)", Pattern.CASE_INSENSITIVE);
+
 	private static final Pattern EXPRESS_ = Pattern.compile("((^|\\W)(express|exp)(\\W|$))", Pattern.CASE_INSENSITIVE);
 	private static final String EXPRESS_REPLACEMENT = "$2" + StringUtils.EMPTY + "$4";
 
@@ -499,6 +503,7 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		}
 		tripHeadsign = EXCHANGE.matcher(tripHeadsign).replaceAll(EXCHANGE_REPLACEMENT);
 		tripHeadsign = FREE_SHUTTLE_SERVICE.matcher(tripHeadsign).replaceAll(FREE_SHUTTLE_SERVICE_REPLACEMENT);
+		tripHeadsign = ENDS_WITH_FREE_SERVICE.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
 		tripHeadsign = EXPRESS_.matcher(tripHeadsign).replaceAll(EXPRESS_REPLACEMENT);
 		tripHeadsign = ENDS_WITH_VIA.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
 		tripHeadsign = CleanUtils.keepToAndRemoveVia(tripHeadsign);

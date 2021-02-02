@@ -2,7 +2,6 @@ package org.mtransit.parser.ca_whistler_transit_system_bus;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.mtransit.commons.StrategicMappingCommons;
 import org.mtransit.parser.CleanUtils;
 import org.mtransit.parser.DefaultAgencyTools;
 import org.mtransit.parser.MTLog;
@@ -18,13 +17,7 @@ import org.mtransit.parser.mt.data.MAgency;
 import org.mtransit.parser.mt.data.MRoute;
 import org.mtransit.parser.mt.data.MTrip;
 
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.mtransit.parser.StringUtils.EMPTY;
@@ -101,11 +94,6 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		return MAgency.ROUTE_TYPE_BUS;
 	}
 
-	private static final Pattern DIGITS = Pattern.compile("[\\d]+");
-
-	private static final long RID_ENDS_WITH_W = 23_000_000L;
-	private static final long RID_ENDS_WITH_X = 24_000_000L;
-
 	@Override
 	public long getRouteId(@NotNull GRoute gRoute) { // used by GTFS-RT
 		return super.getRouteId(gRoute); // used by GTFS-RT
@@ -174,273 +162,21 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		return super.getRouteColor(gRoute);
 	}
 
-	private final HashMap<Long, Long> routeIdToShortName = new HashMap<>();
-
 	@Override
 	public void setTripHeadsign(@NotNull MRoute mRoute, @NotNull MTrip mTrip, @NotNull GTrip gTrip, @NotNull GSpec gtfs) {
-		final long rsn;
-		if (!Utils.isDigitsOnly(mRoute.getShortName())) {
-			Matcher matcher = DIGITS.matcher(mRoute.getShortName());
-			if (matcher.find()) {
-				int digits = Integer.parseInt(matcher.group());
-				String rsnString = mRoute.getShortName().toLowerCase(Locale.ENGLISH);
-				if (rsnString.endsWith("w")) {
-					rsn = digits + RID_ENDS_WITH_W;
-				} else if (rsnString.endsWith("x")) {
-					rsn = digits + RID_ENDS_WITH_X;
-				} else {
-					throw new MTLog.Fatal("Unexpected route ID for %s!", mRoute);
-				}
-			} else {
-				rsn = Long.parseLong(mRoute.getShortName());
-			}
-		} else {
-			rsn = Long.parseLong(mRoute.getShortName());
-		}
-		this.routeIdToShortName.put(mRoute.getId(), rsn);
-		if (rsn == 4L) {
-			if (gTrip.getDirectionId() == 1) { // Marketplace - Free Shuttle - COUNTERCLOCKWISE
-				if (Objects.equals("Marketplace - Free Shuttle", gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.COUNTERCLOCKWISE);
-					return;
-				}
-			}
-		} else if (rsn == 5L) {
-			if (gTrip.getDirectionId() == 0) { // Upper Vlg - Benchlands - CLOCKWISE
-				if ("Upper Vlg - Benchlands - Free Shuttle".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.CLOCKWISE);
-					return;
-				}
-			}
-		} else if (rsn == 6L) {
-			if (gTrip.getDirectionId() == 1) { // Tapley''s-Blueberry - COUNTERCLOCKWISE
-				if ("Tapley's-Blueberry".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.COUNTERCLOCKWISE);
-					return;
-				}
-			}
-		} else if (rsn == 7L) {
-			if (gTrip.getDirectionId() == 0) { // Staff Housing - CLOCKWISE
-				if ("Staff Housing".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.CLOCKWISE);
-					return;
-				}
-			}
-		} else if (rsn == 8L) {
-			if (true) { // #IS_GOOD_ENOUGH
-				if (gTrip.getDirectionId() == 1) { // ??? - CLOCKWISE
-					if ("Lost Lake Shuttle - Free Service".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-						mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.CLOCKWISE);
-						return;
-					}
-				}
-			}
-		} else if (rsn == 10L) {
-			if (gTrip.getDirectionId() == 0) { // Emerald - NORTH
-				if (Arrays.asList( //
-						"Valley Express to Emerald", //
-						"Emerald Via Function Jct-Valley Exp" //
-				).contains(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.NORTH);
-					return;
-				}
-			} else if (gTrip.getDirectionId() == 1) { // Cheakamus - SOUTH
-				if (Arrays.asList( //
-						"Valley Express to Cheakamus", //
-						"Cheakamus Via Function Jct-Valley Exp" //
-				).contains(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.SOUTH);
-					return;
-				}
-			}
-		} else if (rsn == 20L) {
-			if (gTrip.getDirectionId() == 0) { // Village - NORTH
-				if ("To Village".equalsIgnoreCase(gTrip.getTripHeadsign()) //
-						|| "To Village-Via Function Jct".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.NORTH);
-					return;
-				}
-			} else if (gTrip.getDirectionId() == 1) { // Cheakamus - SOUTH
-				if ("Cheakamus".equalsIgnoreCase(gTrip.getTripHeadsign()) //
-						|| "Cheakamus- Via Function Jct".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.SOUTH);
-					return;
-				}
-			}
-		} else if (rsn == 20L + RID_ENDS_WITH_X) { // 20X
-			if (gTrip.getDirectionId() == 0) { // Village - NORTH
-				if ("Village Exp".equalsIgnoreCase(gTrip.getTripHeadsign()) //
-						|| "Village Exp- Via Function Jct".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.NORTH);
-					return;
-				}
-			} else if (gTrip.getDirectionId() == 1) { // Cheakamus - SOUTH
-				if ("Cheakamus Exp".equalsIgnoreCase(gTrip.getTripHeadsign()) //
-						|| "Cheakamus Exp- Via Function Jct".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.SOUTH);
-					return;
-				}
-			}
-		} else if (rsn == 21L) {
-			if (gTrip.getDirectionId() == 0) { // Village - NORTH
-				if ("To Village".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.NORTH);
-					return;
-				}
-			} else if (gTrip.getDirectionId() == 1) { // Spring Creek - SOUTH
-				if ("Spring Creek".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.SOUTH);
-					return;
-				}
-			}
-		} else if (rsn == 25L) {
-			if (gTrip.getDirectionId() == 0) { // Village - NORTH
-				if ("To Village".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.NORTH);
-					return;
-				}
-			} else if (gTrip.getDirectionId() == 1) { // Whistler Creek - SOUTH
-				if ("Whistler Creek".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.SOUTH);
-					return;
-				}
-			}
-		} else if (rsn == 30L) {
-			if (gTrip.getDirectionId() == 0) { // Alpine/Emerald - NORTH
-				if ("Alpine/Emerald- Via Nesters".equalsIgnoreCase(gTrip.getTripHeadsign()) //
-						|| "Emerald- Via Nesters".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.NORTH);
-					return;
-				}
-			} else if (gTrip.getDirectionId() == 1) { // Village - SOUTH
-				if ("To Village".equalsIgnoreCase(gTrip.getTripHeadsign()) //
-						|| "To Village- Via Alpine".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.SOUTH);
-					return;
-				}
-			}
-		} else if (rsn == 31L) {
-			if (gTrip.getDirectionId() == 0) { // Alpine - NORTH
-				if ("Alpine- Via Nesters".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.NORTH);
-					return;
-				}
-			} else if (gTrip.getDirectionId() == 1) { // Village - SOUTH
-				if ("To village".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.SOUTH);
-					return;
-				}
-			}
-		} else if (rsn == 32L) {
-			if (gTrip.getDirectionId() == 0) { // Emerald - NORTH
-				if ("Emerald- Via Spruve Grv".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.NORTH);
-					return;
-				}
-			} else if (gTrip.getDirectionId() == 1) { // Village - SOUTH
-				if ("To Village".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.SOUTH);
-					return;
-				}
-			}
-		} else if (rsn == 99L) {
-			if (gTrip.getDirectionId() == 0) { // Pemberton - NORTH
-				if ("Commuter- To Pemberton".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.NORTH);
-					return;
-				}
-			} else if (gTrip.getDirectionId() == 1) { // Whistler - SOUTH
-				if ("Commuter- to Whistler".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.SOUTH);
-					return;
-				}
-			}
-		}
-		throw new MTLog.Fatal("%s:%s Unexpected trips head-sign for %s!", mTrip.getRouteId(), mRoute.getShortName(), gTrip.toStringPlus());
+		mTrip.setHeadsignString(
+				cleanTripHeadsign(gTrip.getTripHeadsignOrDefault()),
+				gTrip.getDirectionIdOrDefault()
+		);
+	}
+
+	@Override
+	public boolean directionFinderEnabled() {
+		return true;
 	}
 
 	@Override
 	public boolean mergeHeadsign(@NotNull MTrip mTrip, @NotNull MTrip mTripToMerge) {
-		if (MTrip.mergeEmpty(mTrip, mTripToMerge)) {
-			return true;
-		}
-		List<String> headsignsValues = Arrays.asList(mTrip.getHeadsignValue(), mTripToMerge.getHeadsignValue());
-		final long rsn = this.routeIdToShortName.get(mTrip.getRouteId());
-		if (rsn == 1L) {
-			if (Arrays.asList( //
-					"Alpine", //
-					"Emerald", //
-					"Vlg" //
-			).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString("Emerald", mTrip.getHeadsignId());
-				return true;
-			} else if (Arrays.asList( //
-					"Cheakamus", //
-					"Spg Crk", //
-					"Vlg", //
-					"Whistler Crk" //
-			).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString("Cheakamus", mTrip.getHeadsignId());
-				return true;
-			}
-		} else if (rsn == 2L) {
-			if (Arrays.asList( //
-					"Cheakamus", //
-					"Function / Cheakamus" //
-			).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString("Cheakamus", mTrip.getHeadsignId());
-				return true;
-			}
-		} else if (rsn == 20L) {
-			if (Arrays.asList( //
-					"Vlg", //
-					"Vlg" + "-Via Function Jct", //
-					"Via Function Jct" //
-			).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString("Vlg", mTrip.getHeadsignId());
-				return true;
-			} else if (Arrays.asList( //
-					"Cheakamus", //
-					"Cheakamus" + "- Via Function Jct", //
-					"Via Function Jct" //
-			).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString("Cheakamus", mTrip.getHeadsignId());
-				return true;
-			}
-		} else if (rsn == 20L + RID_ENDS_WITH_X) { // 20X
-			if (Arrays.asList( //
-					"Vlg Exp", //
-					"Vlg Exp" + "- Via Function Jct", //
-					"Via Function Jct" //
-			).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString("Vlg Exp", mTrip.getHeadsignId());
-				return true;
-			} else if (Arrays.asList( //
-					"Cheakamus Exp", //
-					"Cheakamus Exp" + "- Via Function Jct", //
-					"Via Function Jct" //
-			).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString("Cheakamus Exp", mTrip.getHeadsignId());
-				return true;
-			}
-		} else if (rsn == 30L) {
-			if (Arrays.asList( //
-					"Alpine / Emerald", //
-					"Alpine / Emerald" + "- Via Nesters", //
-					"Emerald", //
-					"Emerald" + "- Via Nesters" //
-			).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString("Emerald", mTrip.getHeadsignId());
-				return true;
-			} else if (Arrays.asList( //
-					"Vlg", //
-					"Vlg" + "- Via Alpine", //
-					"Via Alpine" //
-			).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString("Vlg", mTrip.getHeadsignId());
-				return true;
-			}
-		}
 		throw new MTLog.Fatal("Unexpected trips to merge %s & %s.", mTrip, mTripToMerge);
 	}
 

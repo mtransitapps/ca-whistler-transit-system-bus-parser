@@ -1,13 +1,12 @@
 package org.mtransit.parser.ca_whistler_transit_system_bus;
 
-import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.mtransit.commons.StrategicMappingCommons;
 import org.mtransit.parser.CleanUtils;
 import org.mtransit.parser.DefaultAgencyTools;
 import org.mtransit.parser.MTLog;
-import org.mtransit.parser.Pair;
-import org.mtransit.parser.SplitUtils;
-import org.mtransit.parser.SplitUtils.RouteTripSpec;
+import org.mtransit.parser.StringUtils;
 import org.mtransit.parser.Utils;
 import org.mtransit.parser.gtfs.data.GCalendar;
 import org.mtransit.parser.gtfs.data.GCalendarDate;
@@ -15,27 +14,26 @@ import org.mtransit.parser.gtfs.data.GRoute;
 import org.mtransit.parser.gtfs.data.GSpec;
 import org.mtransit.parser.gtfs.data.GStop;
 import org.mtransit.parser.gtfs.data.GTrip;
-import org.mtransit.parser.gtfs.data.GTripStop;
 import org.mtransit.parser.mt.data.MAgency;
 import org.mtransit.parser.mt.data.MRoute;
 import org.mtransit.parser.mt.data.MTrip;
-import org.mtransit.parser.mt.data.MTripStop;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-// https://bctransit.com/*/footer/open-data
-// https://bctransit.com/servlet/bctransit/data/GTFS - Whistler
+import static org.mtransit.parser.StringUtils.EMPTY;
+
+// https://www.bctransit.com/open-data
 // https://whistler.mapstrat.com/current/google_transit.zip
 public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
-	public static void main(String[] args) {
+	public static void main(@Nullable String[] args) {
 		if (args == null || args.length == 0) {
 			args = new String[3];
 			args[0] = "input/gtfs.zip";
@@ -45,34 +43,35 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		new WhistlerTransitSystemBusAgencyTools().start(args);
 	}
 
-	private HashSet<String> serviceIds;
+	@Nullable
+	private HashSet<Integer> serviceIdInts;
 
 	@Override
-	public void start(String[] args) {
+	public void start(@NotNull String[] args) {
 		MTLog.log("Generating Whistler Transit System bus data...");
 		long start = System.currentTimeMillis();
-		this.serviceIds = extractUsefulServiceIds(args, this, true);
+		this.serviceIdInts = extractUsefulServiceIdInts(args, this, true);
 		super.start(args);
 		MTLog.log("Generating Whistler Transit System bus data... DONE in %s.", Utils.getPrettyDuration(System.currentTimeMillis() - start));
 	}
 
 	@Override
 	public boolean excludingAll() {
-		return this.serviceIds != null && this.serviceIds.isEmpty();
+		return this.serviceIdInts != null && this.serviceIdInts.isEmpty();
 	}
 
 	@Override
-	public boolean excludeCalendar(GCalendar gCalendar) {
-		if (this.serviceIds != null) {
-			return excludeUselessCalendar(gCalendar, this.serviceIds);
+	public boolean excludeCalendar(@NotNull GCalendar gCalendar) {
+		if (this.serviceIdInts != null) {
+			return excludeUselessCalendarInt(gCalendar, this.serviceIdInts);
 		}
 		return super.excludeCalendar(gCalendar);
 	}
 
 	@Override
-	public boolean excludeCalendarDate(GCalendarDate gCalendarDates) {
-		if (this.serviceIds != null) {
-			return excludeUselessCalendarDate(gCalendarDates, this.serviceIds);
+	public boolean excludeCalendarDate(@NotNull GCalendarDate gCalendarDates) {
+		if (this.serviceIdInts != null) {
+			return excludeUselessCalendarDateInt(gCalendarDates, this.serviceIdInts);
 		}
 		return super.excludeCalendarDate(gCalendarDates);
 	}
@@ -80,7 +79,8 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	private static final String INCLUDE_AGENCY_ID = "1"; // Whistler Transit System only
 
 	@Override
-	public boolean excludeRoute(GRoute gRoute) {
+	public boolean excludeRoute(@NotNull GRoute gRoute) {
+		//noinspection deprecation
 		if (!INCLUDE_AGENCY_ID.equals(gRoute.getAgencyId())) {
 			return true;
 		}
@@ -88,13 +88,14 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	}
 
 	@Override
-	public boolean excludeTrip(GTrip gTrip) {
-		if (this.serviceIds != null) {
-			return excludeUselessTrip(gTrip, this.serviceIds);
+	public boolean excludeTrip(@NotNull GTrip gTrip) {
+		if (this.serviceIdInts != null) {
+			return excludeUselessTripInt(gTrip, this.serviceIdInts);
 		}
 		return super.excludeTrip(gTrip);
 	}
 
+	@NotNull
 	@Override
 	public Integer getAgencyRouteType() {
 		return MAgency.ROUTE_TYPE_BUS;
@@ -106,12 +107,13 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	private static final long RID_ENDS_WITH_X = 24_000_000L;
 
 	@Override
-	public long getRouteId(GRoute gRoute) { // used by GTFS-RT
+	public long getRouteId(@NotNull GRoute gRoute) { // used by GTFS-RT
 		return super.getRouteId(gRoute); // used by GTFS-RT
 	}
 
+	@NotNull
 	@Override
-	public String getRouteLongName(GRoute gRoute) {
+	public String getRouteLongName(@NotNull GRoute gRoute) {
 		String routeLongName = gRoute.getRouteLongName();
 		if (StringUtils.isEmpty(routeLongName)) {
 			routeLongName = gRoute.getRouteDesc();
@@ -123,17 +125,19 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	}
 
 	private static final String AGENCY_COLOR_GREEN = "34B233";// GREEN (from PDF Corporate Graphic Standards)
-	private static final String AGENCY_COLOR_BLUE = "002C77"; // BLUE (from PDF Corporate Graphic Standards)
+	// private static final String AGENCY_COLOR_BLUE = "002C77"; // BLUE (from PDF Corporate Graphic Standards)
 
 	private static final String AGENCY_COLOR = AGENCY_COLOR_GREEN;
 
+	@NotNull
 	@Override
 	public String getAgencyColor() {
 		return AGENCY_COLOR;
 	}
 
+	@Nullable
 	@Override
-	public String getRouteColor(GRoute gRoute) {
+	public String getRouteColor(@NotNull GRoute gRoute) {
 		String routeColor = gRoute.getRouteColor();
 		if ("000000".equals(routeColor)) {
 			routeColor = null; // ignore black
@@ -154,7 +158,7 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 			case 6: return "FFC10E";
 			case 7: return "B2A97E";
 			case 8: return "F399C0";
-			case 10: return AGENCY_COLOR_BLUE; // TODO
+			case 10: return "8077B8";
 			case 20: return "004B8D";
 			case 21: return "F7921E";
 			case 25: return "EC1A8D";
@@ -164,52 +168,16 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 			case 99: return "5D86A0";
 			// @formatter:on
 			default:
-				MTLog.logFatal("Unexpected route color %s!", gRoute);
-				return null;
+				throw new MTLog.Fatal("Unexpected route color %s!", gRoute);
 			}
 		}
 		return super.getRouteColor(gRoute);
 	}
 
-	private static HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
-
-	static {
-		//noinspection UnnecessaryLocalVariable
-		HashMap<Long, RouteTripSpec> map2 = new HashMap<>();
-		ALL_ROUTE_TRIPS2 = map2;
-	}
-
-	@Override
-	public int compareEarly(long routeId, List<MTripStop> list1, List<MTripStop> list2, MTripStop ts1, MTripStop ts2, GStop ts1GStop, GStop ts2GStop) {
-		if (ALL_ROUTE_TRIPS2.containsKey(routeId)) {
-			return ALL_ROUTE_TRIPS2.get(routeId).compare(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop, this);
-		}
-		return super.compareEarly(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop);
-	}
-
-	@Override
-	public ArrayList<MTrip> splitTrip(MRoute mRoute, GTrip gTrip, GSpec gtfs) {
-		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
-			return ALL_ROUTE_TRIPS2.get(mRoute.getId()).getAllTrips();
-		}
-		return super.splitTrip(mRoute, gTrip, gtfs);
-	}
-
-	@Override
-	public Pair<Long[], Integer[]> splitTripStop(MRoute mRoute, GTrip gTrip, GTripStop gTripStop, ArrayList<MTrip> splitTrips, GSpec routeGTFS) {
-		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
-			return SplitUtils.splitTripStop(mRoute, gTrip, gTripStop, routeGTFS, ALL_ROUTE_TRIPS2.get(mRoute.getId()), this);
-		}
-		return super.splitTripStop(mRoute, gTrip, gTripStop, splitTrips, routeGTFS);
-	}
-
 	private final HashMap<Long, Long> routeIdToShortName = new HashMap<>();
 
 	@Override
-	public void setTripHeadsign(MRoute mRoute, MTrip mTrip, GTrip gTrip, GSpec gtfs) {
-		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
-			return; // split
-		}
+	public void setTripHeadsign(@NotNull MRoute mRoute, @NotNull MTrip mTrip, @NotNull GTrip gTrip, @NotNull GSpec gtfs) {
 		final long rsn;
 		if (!Utils.isDigitsOnly(mRoute.getShortName())) {
 			Matcher matcher = DIGITS.matcher(mRoute.getShortName());
@@ -221,8 +189,7 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 				} else if (rsnString.endsWith("x")) {
 					rsn = digits + RID_ENDS_WITH_X;
 				} else {
-					MTLog.logFatal("Unexpected route ID for %s!", mRoute);
-					return;
+					throw new MTLog.Fatal("Unexpected route ID for %s!", mRoute);
 				}
 			} else {
 				rsn = Long.parseLong(mRoute.getShortName());
@@ -233,9 +200,7 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		this.routeIdToShortName.put(mRoute.getId(), rsn);
 		if (rsn == 4L) {
 			if (gTrip.getDirectionId() == 1) { // Marketplace - Free Shuttle - COUNTERCLOCKWISE
-				if (Arrays.asList( //
-						"Marketplace - Free Shuttle" //
-				).contains(gTrip.getTripHeadsign())) {
+				if (Objects.equals("Marketplace - Free Shuttle", gTrip.getTripHeadsign())) {
 					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.COUNTERCLOCKWISE);
 					return;
 				}
@@ -391,11 +356,11 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 				}
 			}
 		}
-		MTLog.logFatal("%s:%s Unexpected trips head-sign for %s!", mTrip.getRouteId(), mRoute.getShortName(), gTrip.toStringPlus());
+		throw new MTLog.Fatal("%s:%s Unexpected trips head-sign for %s!", mTrip.getRouteId(), mRoute.getShortName(), gTrip.toStringPlus());
 	}
 
 	@Override
-	public boolean mergeHeadsign(MTrip mTrip, MTrip mTripToMerge) {
+	public boolean mergeHeadsign(@NotNull MTrip mTrip, @NotNull MTrip mTripToMerge) {
 		if (MTrip.mergeEmpty(mTrip, mTripToMerge)) {
 			return true;
 		}
@@ -476,41 +441,34 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 				return true;
 			}
 		}
-		MTLog.logFatal("Unexpected trips to merge %s & %s.", mTrip, mTripToMerge);
-		return false;
+		throw new MTLog.Fatal("Unexpected trips to merge %s & %s.", mTrip, mTripToMerge);
 	}
 
-	private static final String EXCH = "Exch";
-	private static final Pattern EXCHANGE = Pattern.compile("((^|\\W)(exchange)(\\W|$))", Pattern.CASE_INSENSITIVE);
-	private static final String EXCHANGE_REPLACEMENT = "$2" + EXCH + "$4";
-
-	private static final Pattern ENDS_WITH_VIA = Pattern.compile("([\\-]?via .*$)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern DASH_VIA_ = Pattern.compile("(-via )", Pattern.CASE_INSENSITIVE);
+	private static final String DASH_VIA_REPLACEMENT = " via ";
 
 	private static final Pattern FREE_SHUTTLE_SERVICE = Pattern.compile("((^|\\W)(free (service|shuttle))(\\W|$))", Pattern.CASE_INSENSITIVE);
-	private static final String FREE_SHUTTLE_SERVICE_REPLACEMENT = "$2" + StringUtils.EMPTY + "$5";
+	private static final String FREE_SHUTTLE_SERVICE_REPLACEMENT = "$2" + EMPTY + "$5";
 
 	private static final Pattern ENDS_WITH_FREE_SERVICE = Pattern.compile("( + (free (service|shuttle))$)", Pattern.CASE_INSENSITIVE);
 
 	private static final Pattern EXPRESS_ = Pattern.compile("((^|\\W)(express|exp)(\\W|$))", Pattern.CASE_INSENSITIVE);
-	private static final String EXPRESS_REPLACEMENT = "$2" + StringUtils.EMPTY + "$4";
+	private static final String EXPRESS_REPLACEMENT = "$2" + EMPTY + "$4";
 
 	private static final Pattern ENDS_WITH_DASH = Pattern.compile("([\\s]*[\\-]+[\\s]*$)", Pattern.CASE_INSENSITIVE);
 
+	@NotNull
 	@Override
-	public String cleanTripHeadsign(String tripHeadsign) {
-		if (Utils.isUppercaseOnly(tripHeadsign, true, true)) {
-			tripHeadsign = tripHeadsign.toLowerCase(Locale.ENGLISH);
-		}
-		tripHeadsign = EXCHANGE.matcher(tripHeadsign).replaceAll(EXCHANGE_REPLACEMENT);
+	public String cleanTripHeadsign(@NotNull String tripHeadsign) {
 		tripHeadsign = FREE_SHUTTLE_SERVICE.matcher(tripHeadsign).replaceAll(FREE_SHUTTLE_SERVICE_REPLACEMENT);
-		tripHeadsign = ENDS_WITH_FREE_SERVICE.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
+		tripHeadsign = ENDS_WITH_FREE_SERVICE.matcher(tripHeadsign).replaceAll(EMPTY);
 		tripHeadsign = EXPRESS_.matcher(tripHeadsign).replaceAll(EXPRESS_REPLACEMENT);
-		tripHeadsign = ENDS_WITH_VIA.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
+		tripHeadsign = DASH_VIA_.matcher(tripHeadsign).replaceAll(DASH_VIA_REPLACEMENT);
 		tripHeadsign = CleanUtils.keepToAndRemoveVia(tripHeadsign);
-		tripHeadsign = ENDS_WITH_DASH.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
+		tripHeadsign = ENDS_WITH_DASH.matcher(tripHeadsign).replaceAll(EMPTY);
 		tripHeadsign = CleanUtils.CLEAN_AND.matcher(tripHeadsign).replaceAll(CleanUtils.CLEAN_AND_REPLACEMENT);
-		tripHeadsign = CleanUtils.CLEAN_PARENTHESE1.matcher(tripHeadsign).replaceAll(CleanUtils.CLEAN_PARENTHESE1_REPLACEMENT);
-		tripHeadsign = CleanUtils.CLEAN_PARENTHESE2.matcher(tripHeadsign).replaceAll(CleanUtils.CLEAN_PARENTHESE2_REPLACEMENT);
+		tripHeadsign = CleanUtils.CLEAN_PARENTHESIS1.matcher(tripHeadsign).replaceAll(CleanUtils.CLEAN_PARENTHESIS1_REPLACEMENT);
+		tripHeadsign = CleanUtils.CLEAN_PARENTHESIS2.matcher(tripHeadsign).replaceAll(CleanUtils.CLEAN_PARENTHESIS2_REPLACEMENT);
 		tripHeadsign = CleanUtils.cleanSlashes(tripHeadsign);
 		tripHeadsign = CleanUtils.cleanStreetTypes(tripHeadsign);
 		tripHeadsign = CleanUtils.cleanNumbers(tripHeadsign);
@@ -520,21 +478,21 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	private static final Pattern STARTS_WITH_DCOM = Pattern.compile("(^(\\(-DCOM-\\)))", Pattern.CASE_INSENSITIVE);
 	private static final Pattern STARTS_WITH_IMPL = Pattern.compile("(^(\\(-IMPL-\\)))", Pattern.CASE_INSENSITIVE);
 
+	@NotNull
 	@Override
-	public String cleanStopName(String gStopName) {
-		gStopName = STARTS_WITH_DCOM.matcher(gStopName).replaceAll(StringUtils.EMPTY);
-		gStopName = STARTS_WITH_IMPL.matcher(gStopName).replaceAll(StringUtils.EMPTY);
+	public String cleanStopName(@NotNull String gStopName) {
+		gStopName = STARTS_WITH_DCOM.matcher(gStopName).replaceAll(EMPTY);
+		gStopName = STARTS_WITH_IMPL.matcher(gStopName).replaceAll(EMPTY);
 		gStopName = CleanUtils.cleanBounds(gStopName);
 		gStopName = CleanUtils.CLEAN_AND.matcher(gStopName).replaceAll(CleanUtils.CLEAN_AND_REPLACEMENT);
 		gStopName = CleanUtils.CLEAN_AT.matcher(gStopName).replaceAll(CleanUtils.CLEAN_AT_REPLACEMENT);
-		gStopName = EXCHANGE.matcher(gStopName).replaceAll(EXCHANGE_REPLACEMENT);
 		gStopName = CleanUtils.cleanStreetTypes(gStopName);
 		gStopName = CleanUtils.cleanNumbers(gStopName);
 		return CleanUtils.cleanLabel(gStopName);
 	}
 
 	@Override
-	public int getStopId(GStop gStop) { // used by GTFS-RT
+	public int getStopId(@NotNull GStop gStop) { // used by GTFS-RT
 		return super.getStopId(gStop);
 	}
 }

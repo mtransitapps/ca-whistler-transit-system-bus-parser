@@ -1,91 +1,52 @@
 package org.mtransit.parser.ca_whistler_transit_system_bus;
 
+import static org.mtransit.commons.StringUtils.EMPTY;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.mtransit.parser.CleanUtils;
+import org.mtransit.commons.CleanUtils;
+import org.mtransit.parser.ColorUtils;
 import org.mtransit.parser.DefaultAgencyTools;
 import org.mtransit.parser.MTLog;
-import org.mtransit.parser.StringUtils;
-import org.mtransit.parser.Utils;
-import org.mtransit.parser.gtfs.data.GCalendar;
-import org.mtransit.parser.gtfs.data.GCalendarDate;
 import org.mtransit.parser.gtfs.data.GRoute;
-import org.mtransit.parser.gtfs.data.GSpec;
 import org.mtransit.parser.gtfs.data.GStop;
-import org.mtransit.parser.gtfs.data.GTrip;
 import org.mtransit.parser.mt.data.MAgency;
-import org.mtransit.parser.mt.data.MRoute;
-import org.mtransit.parser.mt.data.MTrip;
 
-import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
 import java.util.regex.Pattern;
-
-import static org.mtransit.parser.StringUtils.EMPTY;
 
 // https://www.bctransit.com/open-data
 // https://whistler.mapstrat.com/current/google_transit.zip
 public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
-	public static void main(@Nullable String[] args) {
-		if (args == null || args.length == 0) {
-			args = new String[3];
-			args[0] = "input/gtfs.zip";
-			args[1] = "../../mtransitapps/ca-whistler-transit-system-bus-android/res/raw/";
-			args[2] = ""; // files-prefix
-		}
+	public static void main(@NotNull String[] args) {
 		new WhistlerTransitSystemBusAgencyTools().start(args);
 	}
 
 	@Nullable
-	private HashSet<Integer> serviceIdInts;
-
 	@Override
-	public void start(@NotNull String[] args) {
-		MTLog.log("Generating Whistler Transit System bus data...");
-		long start = System.currentTimeMillis();
-		this.serviceIdInts = extractUsefulServiceIdInts(args, this, true);
-		super.start(args);
-		MTLog.log("Generating Whistler Transit System bus data... DONE in %s.", Utils.getPrettyDuration(System.currentTimeMillis() - start));
+	public List<Locale> getSupportedLanguages() {
+		return LANG_EN;
 	}
 
 	@Override
-	public boolean excludingAll() {
-		return this.serviceIdInts != null && this.serviceIdInts.isEmpty();
+	public boolean defaultExcludeEnabled() {
+		return true;
 	}
 
+	@NotNull
 	@Override
-	public boolean excludeCalendar(@NotNull GCalendar gCalendar) {
-		if (this.serviceIdInts != null) {
-			return excludeUselessCalendarInt(gCalendar, this.serviceIdInts);
-		}
-		return super.excludeCalendar(gCalendar);
+	public String getAgencyName() {
+		return "Whistler TS";
 	}
 
-	@Override
-	public boolean excludeCalendarDate(@NotNull GCalendarDate gCalendarDates) {
-		if (this.serviceIdInts != null) {
-			return excludeUselessCalendarDateInt(gCalendarDates, this.serviceIdInts);
-		}
-		return super.excludeCalendarDate(gCalendarDates);
-	}
+	private static final String AGENCY_ID = "1"; // Whistler Transit System only
 
-	private static final String INCLUDE_AGENCY_ID = "1"; // Whistler Transit System only
-
+	@Nullable
 	@Override
-	public boolean excludeRoute(@NotNull GRoute gRoute) {
-		//noinspection deprecation
-		if (!INCLUDE_AGENCY_ID.equals(gRoute.getAgencyId())) {
-			return true;
-		}
-		return super.excludeRoute(gRoute);
-	}
-
-	@Override
-	public boolean excludeTrip(@NotNull GTrip gTrip) {
-		if (this.serviceIdInts != null) {
-			return excludeUselessTripInt(gTrip, this.serviceIdInts);
-		}
-		return super.excludeTrip(gTrip);
+	public String getAgencyId() {
+		return AGENCY_ID;
 	}
 
 	@NotNull
@@ -95,21 +56,37 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	}
 
 	@Override
-	public long getRouteId(@NotNull GRoute gRoute) { // used by GTFS-RT
-		return super.getRouteId(gRoute); // used by GTFS-RT
+	public boolean defaultRouteIdEnabled() {
+		return true;
+	}
+
+	@Override
+	public boolean useRouteShortNameForRouteId() {
+		return false; // route ID used by GTFS-RT
+	}
+
+	@Override
+	public boolean tryRouteDescForMissingLongName() {
+		return true;
+	}
+
+	@Override
+	public boolean defaultRouteLongNameEnabled() {
+		return true;
 	}
 
 	@NotNull
 	@Override
-	public String getRouteLongName(@NotNull GRoute gRoute) {
-		String routeLongName = gRoute.getRouteLongName();
-		if (StringUtils.isEmpty(routeLongName)) {
-			routeLongName = gRoute.getRouteDesc();
-		}
+	public String cleanRouteLongName(@NotNull String routeLongName) {
 		routeLongName = CleanUtils.cleanSlashes(routeLongName);
 		routeLongName = CleanUtils.cleanNumbers(routeLongName);
 		routeLongName = CleanUtils.cleanStreetTypes(routeLongName);
 		return CleanUtils.cleanLabel(routeLongName);
+	}
+
+	@Override
+	public boolean defaultAgencyColorEnabled() {
+		return true;
 	}
 
 	private static final String AGENCY_COLOR_GREEN = "34B233";// GREEN (from PDF Corporate Graphic Standards)
@@ -125,59 +102,53 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	@Nullable
 	@Override
-	public String getRouteColor(@NotNull GRoute gRoute) {
-		String routeColor = gRoute.getRouteColor();
-		if ("000000".equals(routeColor)) {
-			routeColor = null; // ignore black
+	public String fixColor(@Nullable String color) {
+		if (ColorUtils.BLACK.equals(color)) {
+			return null; // ignore black
 		}
-		if (StringUtils.isEmpty(routeColor)) {
-			if (!Utils.isDigitsOnly(gRoute.getRouteShortName())) {
-				if ("20X".equalsIgnoreCase(gRoute.getRouteShortName())) {
-					return "004B8D";
-				} else if ("25X".equalsIgnoreCase(gRoute.getRouteShortName())) {
-					return "EC1A8D";
-				}
-			}
-			int rsn = Integer.parseInt(gRoute.getRouteShortName());
-			switch (rsn) {
-			// @formatter:off
-			case 4: return "00A84F";
-			case 5: return "8D0B3A";
-			case 6: return "FFC10E";
-			case 7: return "B2A97E";
-			case 8: return "F399C0";
-			case 10: return "8077B8";
-			case 20: return "004B8D";
-			case 21: return "F7921E";
-			case 25: return "EC1A8D";
-			case 30: return "00ADEE";
-			case 31: return "A54499";
-			case 32: return "8BC53F";
-			case 99: return "5D86A0";
-			// @formatter:on
-			default:
-				throw new MTLog.Fatal("Unexpected route color %s!", gRoute);
-			}
-		}
-		return super.getRouteColor(gRoute);
+		return super.fixColor(color);
 	}
 
+	@Nullable
 	@Override
-	public void setTripHeadsign(@NotNull MRoute mRoute, @NotNull MTrip mTrip, @NotNull GTrip gTrip, @NotNull GSpec gtfs) {
-		mTrip.setHeadsignString(
-				cleanTripHeadsign(gTrip.getTripHeadsignOrDefault()),
-				gTrip.getDirectionIdOrDefault()
-		);
+	public String provideMissingRouteColor(@NotNull GRoute gRoute) {
+		switch (gRoute.getRouteShortName()) {
+		case "4":
+			return "00A84F";
+		case "5":
+			return "8D0B3A";
+		case "6":
+			return "FFC10E";
+		case "7":
+			return "B2A97E";
+		case "8":
+			return "F399C0";
+		case "10":
+			return "8077B8";
+		case "20":
+		case "20X":
+			return "004B8D";
+		case "21":
+			return "F7921E";
+		case "25":
+		case "25X":
+			return "EC1A8D";
+		case "30":
+			return "00ADEE";
+		case "31":
+			return "A54499";
+		case "32":
+			return "8BC53F";
+		case "99":
+			return "5D86A0";
+		default:
+			throw new MTLog.Fatal("Unexpected route color %s!", gRoute);
+		}
 	}
 
 	@Override
 	public boolean directionFinderEnabled() {
 		return true;
-	}
-
-	@Override
-	public boolean mergeHeadsign(@NotNull MTrip mTrip, @NotNull MTrip mTripToMerge) {
-		throw new MTLog.Fatal("Unexpected trips to merge %s & %s.", mTrip, mTripToMerge);
 	}
 
 	private static final Pattern DASH_VIA_ = Pattern.compile("(-via )", Pattern.CASE_INSENSITIVE);

@@ -17,7 +17,6 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 
 // https://www.bctransit.com/open-data
-// https://whistler.mapstrat.com/current/google_transit.zip
 public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	public static void main(@NotNull String[] args) {
@@ -63,6 +62,11 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public boolean useRouteShortNameForRouteId() {
 		return false; // route ID used by GTFS-RT
+	}
+
+	@Override
+	public @Nullable String getRouteIdCleanupRegex() {
+		return "\\-[A-Z]+$";
 	}
 
 	@Override
@@ -162,7 +166,7 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	private static final Pattern EXPRESS_ = Pattern.compile("((^|\\W)(express|exp)(\\W|$))", Pattern.CASE_INSENSITIVE);
 	private static final String EXPRESS_REPLACEMENT = "$2" + EMPTY + "$4";
 
-	private static final Pattern ENDS_WITH_DASH = Pattern.compile("([\\s]*[\\-]+[\\s]*$)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern ENDS_WITH_DASH = Pattern.compile("(\\s*-+\\s*$)", Pattern.CASE_INSENSITIVE);
 
 	@NotNull
 	@Override

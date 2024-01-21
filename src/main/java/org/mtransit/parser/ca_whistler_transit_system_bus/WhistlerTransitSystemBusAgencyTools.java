@@ -40,14 +40,6 @@ public class WhistlerTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		return "Whistler TS";
 	}
 
-	private static final String AGENCY_ID = "1"; // Whistler Transit System only
-
-	@Nullable
-	@Override
-	public String getAgencyId() {
-		return AGENCY_ID;
-	}
-
 	@NotNull
 	@Override
 	public Integer getAgencyRouteType() {
